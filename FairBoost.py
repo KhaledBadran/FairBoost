@@ -33,10 +33,10 @@ class FairBoost(object):
     # Generates all "cleaned" data sets
     # Returns an array of (X,y)
 
-    def __preprocess_data(self, X, y):
+    def __preprocess_data(self, dataset_orig_train, unprivileged_groups, privileged_groups):
         pp_data = []
         for ppf in self.preprocessing_functions:
-            pp_data.append(ppf(X, y))
+            pp_data.append(ppf(dataset_orig_train))
         return pp_data
 
     def __get_avg_dist_arr(self, data):
@@ -69,36 +69,43 @@ class FairBoost(object):
     def __merge_Xy(self, datasets):
         res = []
         for dataset in datasets:
-            X, y = dataset[0], np.expand_dims(dataset[1], axis=-1)
+            X = dataset.features
+            y = dataset.labels
+            # X, y = dataset[0], np.expand_dims(dataset[1], axis=-1)
             m = np.concatenate([X, y], axis=-1)
             res.append(m)
-        return np.array(res)
+        # the data shapes changed
+        # return np.array(res)
+        return res
 
     # Generate the boostrap data sets
     # Returns a list of (X,y)
-    def __bootstrap_datasets(self, X, y):
-        datasets = self.__preprocess_data(X, y)
+    def __bootstrap_datasets(self, dataset_orig_train, unprivileged_groups, privileged_groups):
+        datasets = self.__preprocess_data(dataset_orig_train, unprivileged_groups, privileged_groups)
         datasets = self.__merge_Xy(datasets)
         # If we do the custom bootstrapping, we must define a custom PDF
-        if self.bootstrap_type == Bootstrap_type.CUSTOM:
-            dist_arrays = self.__get_avg_dist_arr(datasets)
-        else:
-            dist_arrays = [None for _ in range(len(datasets))]
+        # if self.bootstrap_type == Bootstrap_type.CUSTOM:
+        #     dist_arrays = self.__get_avg_dist_arr(datasets)
+        # else:
+        #     dist_arrays = [None for _ in range(len(datasets))]
+        #
+        # bootstrap_datasets = []
+        # for dataset, dist_arr in zip(datasets, dist_arrays):
+        #     indexes = [i for i in range(len(dataset))]
+        #     size = int(self.bootstrap_size*len(dataset))
+        #     indexes = np.random.choice(
+        #         indexes, size=size, replace=True, p=dist_arr)
+        #     bootstrap_datasets.append(
+        #         (dataset[indexes, :-1], dataset[indexes, -1]))
 
-        bootstrap_datasets = []
-        for dataset, dist_arr in zip(datasets, dist_arrays):
-            indexes = [i for i in range(len(dataset))]
-            size = int(self.bootstrap_size*len(dataset))
-            indexes = np.random.choice(
-                indexes, size=size, replace=True, p=dist_arr)
-            bootstrap_datasets.append(
-                (dataset[indexes, :-1], dataset[indexes, -1]))
+        return datasets
 
-        return bootstrap_datasets
-
-    def fit(self, X, y):
-        datasets = self.__bootstrap_datasets(X, y)
-        for X_bootstrap, y_bootstrap in datasets:
+    def fit(self, dataset_orig_train, unprivileged_groups, privileged_groups):
+        datasets = self.__bootstrap_datasets(dataset_orig_train, unprivileged_groups, privileged_groups)
+        for data in datasets:
+            X_bootstrap = data[:,:-1]
+            # y_bootstrap = data..ravel()
+            y_bootstrap = data[:,-1]
             model = clone(self.model)
             model.fit(X_bootstrap, y_bootstrap)
             self.models.append(model)
@@ -107,8 +114,10 @@ class FairBoost(object):
     def predict(self, X):
         y_pred = []
         for i in range(len(self.models)):
-            y_pred.append(self.models[i].predict(X))
+            data = self.preprocessing_functions[i](X)
+            y_pred.append(self.models[i].predict(data.features))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
         y_pred = np.mean(y_pred, axis=-1).astype(int)
+        print(y_pred)
         return y_pred
