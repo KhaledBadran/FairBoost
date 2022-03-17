@@ -1,9 +1,7 @@
 ## imports ##
 import numpy as np
 from sklearn.base import clone
-from sklearn.metrics import accuracy_score, precision_score, recall_score
 import scipy.spatial.distance as dist
-from sklearn.preprocessing import normalize
 
 from enum import Enum
 
@@ -159,8 +157,9 @@ class FairBoost(object):
         '''
         n_arr = []
         for arr in arrays:
-            arr = normalize(arr)
-            n_arr.append(arr)
+            s = np.sum(arr)
+            n = arr/s
+            n_arr.append(n)
         return np.array(n_arr)
 
     # Generate the boostrap data sets
