@@ -74,8 +74,37 @@ class FairBoost(object):
             res.append(m)
         return np.array(res)
 
+    def __unmerge_Xy(self, datasets):
+        res = []
+        for dataset in datasets:
+            res.append((dataset[:, :-1], dataset[:, -1]))
+        return res
+
+    def __initialize_bootstrap_datasets(self, datasets):
+        bootstrap_datasets = []
+        # Generate indexes array assigns each instance to
+        indexes = [i for i in range(len(self.preprocessing_functions))]
+        indexes = np.random.choice(
+            indexes, size=len(datasets[0]), replace=True)
+        for i, dataset in enumerate(datasets):
+            bootstrap_datasets.append(dataset[indexes == i])
+        return bootstrap_datasets
+
+    def __fill_boostrap_datasets(self, bootstrap_datasets, datasets, dist_arrays):
+        required_size = int(self.bootstrap_size*len(datasets[0]))
+        for i, dist_arr in enumerate(dist_arrays):
+            crnt_size = len(bootstrap_datasets[i])
+            dataset = datasets[i]
+            indexes = [i for i in range(len(dataset))]
+            indexes = np.random.choice(
+                indexes, size=(required_size-crnt_size), replace=True, p=dist_arr)
+            bootstrap_datasets[i] = np.concatenate(
+                (bootstrap_datasets[i], dataset[indexes]))
+        return bootstrap_datasets
+
     # Generate the boostrap data sets
     # Returns a list of (X,y)
+
     def __bootstrap_datasets(self, X, y):
         datasets = self.__preprocess_data(X, y)
         datasets = self.__merge_Xy(datasets)
@@ -85,15 +114,11 @@ class FairBoost(object):
         else:
             dist_arrays = [None for _ in range(len(datasets))]
 
-        bootstrap_datasets = []
-        for dataset, dist_arr in zip(datasets, dist_arrays):
-            indexes = [i for i in range(len(dataset))]
-            size = int(self.bootstrap_size*len(dataset))
-            indexes = np.random.choice(
-                indexes, size=size, replace=True, p=dist_arr)
-            bootstrap_datasets.append(
-                (dataset[indexes, :-1], dataset[indexes, -1]))
+        bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
+        bootstrap_datasets = self.__fill_boostrap_datasets(
+            bootstrap_datasets, datasets, dist_arrays)
 
+        bootstrap_datasets = self.__unmerge_Xy(bootstrap_datasets)
         return bootstrap_datasets
 
     def fit(self, X, y):
