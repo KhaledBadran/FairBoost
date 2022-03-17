@@ -4,7 +4,7 @@ import numpy as np
 from aif360.algorithms.preprocessing import Reweighing
 from aif360.algorithms.preprocessing import DisparateImpactRemover
 
-from fairboost import FairBoost
+from FairBoost import FairBoost
 from data import get_german_dataset
 from preprocessing_functions import generate_lambda_function_dir, generate_lambda_function_reweighing, \
     generate_lambda_function_LFR
