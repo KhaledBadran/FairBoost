@@ -1,37 +1,28 @@
-import numpy as np
-from sklearn.base import clone
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import StratifiedKFold,cross_validate
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score,precision_score,recall_score
+import numpy as np
+
+from aif360.algorithms.preprocessing import Reweighing
+from aif360.algorithms.preprocessing import DisparateImpactRemover
 
 from FairBoost import FairBoost
+from data import get_german_dataset
+from preprocessing_functions import generate_lambda_function_dir, generate_lambda_function_reweighing, \
+    generate_lambda_function_LFR
 
+dataset_orig_train, dataset_orig_val, dataset_orig_test, unprivileged_groups, privileged_groups = get_german_dataset()
+X = dataset_orig_train.features
+y = dataset_orig_train.labels.ravel()
 
-def function1(data):
-    return data
-
-def function2(data):
-    return data * 0.2
-
-# def preprocessing1(data):
-#   return lambda a : function1(data)
-
-preprocessing1= lambda data:function1(data)
-preprocessing2= lambda data:function2(data)
-
-data = load_breast_cancer()
-X    = data.data
-y    = data.target
 model = DecisionTreeClassifier(class_weight='balanced')
-preprocessing = (preprocessing1, preprocessing2)
-## declare an ensemble instance with default parameters ##
 
-data = {'X': X, 'y': y}
-ens = FairBoost(data, model, preprocessing)
+preprocessing1 = generate_lambda_function_reweighing(unprivileged_groups, privileged_groups)
+preprocessing2 = generate_lambda_function_dir(dataset_orig_train.protected_attribute_names)
+preprocessing3 = generate_lambda_function_LFR(unprivileged_groups, privileged_groups)
+preprocessing = (preprocessing1, preprocessing2, preprocessing3)
+
+# data = {'X': X, 'y': y}
+ens = FairBoost(model, preprocessing)
 
 ## train the ensemble & view estimates for prediction error ##
-ens.train_models()
-ens.predict()
-
-
+ens.fit(dataset_orig_train, unprivileged_groups, privileged_groups)
+ens.predict(dataset_orig_test)
