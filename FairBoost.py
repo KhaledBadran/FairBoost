@@ -44,7 +44,7 @@ class FairBoost(object):
         '''
         pp_data = []
         for ppf in self.preprocessing_functions:
-            pp_data.append(ppf(X, y))
+            pp_data.append(ppf(X))
         return pp_data
 
     def __get_avg_dist_arr(self, data):
@@ -90,7 +90,8 @@ class FairBoost(object):
             X, y = dataset[0], np.expand_dims(dataset[1], axis=-1)
             m = np.concatenate([X, y], axis=-1)
             res.append(m)
-        return np.array(res)
+        # return np.array(res)
+        return res
 
     def __unmerge_Xy(self, datasets):
         '''
@@ -218,7 +219,8 @@ class FairBoost(object):
         '''
         y_pred = []
         for i in range(len(self.models)):
-            y_pred.append(self.models[i].predict(X))
+            data = self.preprocessing_functions[i](X)[0]
+            y_pred.append(self.models[i].predict(data))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
         y_pred = np.mean(y_pred, axis=-1).astype(int)
