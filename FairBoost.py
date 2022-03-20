@@ -31,7 +31,7 @@ class FairBoost(object):
     # Generates all "cleaned" data sets
     # Returns an array of (X,y)
 
-    def __preprocess_data(self, X, y):
+    def __transform(self, dataset, fit=False):
         '''
         Preprocess data set using each pre-processing function.
 
@@ -44,7 +44,11 @@ class FairBoost(object):
         '''
         pp_data = []
         for ppf in self.preprocessing_functions:
-            pp_data.append(ppf(X, y))
+            if fit:
+                p_data = ppf.fit_transform(dataset)
+            else:
+                p_data = ppf.transform(dataset)
+            pp_data.append((p_data.features, p_data.labels))
         return pp_data
 
     def __get_avg_dist_arr(self, data):
@@ -87,7 +91,7 @@ class FairBoost(object):
         '''
         res = []
         for dataset in datasets:
-            X, y = dataset[0], np.expand_dims(dataset[1], axis=-1)
+            X, y = dataset[0], dataset[1]
             m = np.concatenate([X, y], axis=-1)
             res.append(m)
         return np.array(res)
@@ -158,13 +162,19 @@ class FairBoost(object):
         n_arr = []
         for arr in arrays:
             s = np.sum(arr)
-            n = arr/s
+            # Avoid divisions by zero
+            if s == 0:
+                n = np.ones(arr.shape)
+                s = np.sum(n)
+                n = n/s
+            else:
+                n = arr/s
             n_arr.append(n)
         return np.array(n_arr)
 
     # Generate the boostrap data sets
     # Returns a list of (X,y)
-    def __bootstrap_datasets(self, X, y):
+    def __bootstrap_datasets(self, dataset):
         '''
         Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
                 Parameters:
@@ -174,7 +184,7 @@ class FairBoost(object):
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-        datasets = self.__preprocess_data(X, y)
+        datasets = self.__transform(dataset, fit=True)
         datasets = self.__merge_Xy(datasets)
         # If we do the custom bootstrapping, we must define a custom PDF
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
@@ -190,7 +200,7 @@ class FairBoost(object):
         bootstrap_datasets = self.__unmerge_Xy(bootstrap_datasets)
         return bootstrap_datasets
 
-    def fit(self, X, y):
+    def fit(self, dataset):
         '''
         Fit function as per Sklearn API.
                 Parameters:
@@ -200,14 +210,14 @@ class FairBoost(object):
                 Returns:
                         self
         '''
-        datasets = self.__bootstrap_datasets(X, y)
+        datasets = self.__bootstrap_datasets(dataset)
         for X_bootstrap, y_bootstrap in datasets:
             model = clone(self.model)
             model.fit(X_bootstrap, y_bootstrap)
             self.models.append(model)
         return self
 
-    def predict(self, X):
+    def predict(self, dataset):
         '''
         Predict function as per Sklearn API.
                 Parameters:
@@ -217,9 +227,12 @@ class FairBoost(object):
                         y_pred: Predicted labels.
         '''
         y_pred = []
+        datasets = self.__transform(dataset)
         for i in range(len(self.models)):
+            X, y =datasets[i]
             y_pred.append(self.models[i].predict(X))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
         y_pred = np.mean(y_pred, axis=-1).astype(int)
         return y_pred
+
