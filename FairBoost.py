@@ -2,6 +2,9 @@
 import numpy as np
 from sklearn.base import clone
 import scipy.spatial.distance as dist
+import warnings
+import os
+import sys
 
 from enum import Enum
 
@@ -44,10 +47,17 @@ class FairBoost(object):
         '''
         pp_data = []
         for ppf in self.preprocessing_functions:
-            if fit:
-                p_data = ppf.fit_transform(dataset)
-            else:
-                p_data = ppf.transform(dataset)
+            print(type(ppf).__name__)
+            # Turning off prints and warnings
+            with warnings.catch_warnings():
+                sys.stdout = open(os.devnull, 'w')
+                warnings.simplefilter("ignore")
+
+                if fit:
+                    p_data = ppf.fit_transform(dataset)
+                else:
+                    p_data = ppf.transform(dataset)
+                sys.stdout = sys.__stdout__
             pp_data.append((p_data.features, p_data.labels))
         return pp_data
 
@@ -229,10 +239,9 @@ class FairBoost(object):
         y_pred = []
         datasets = self.__transform(dataset)
         for i in range(len(self.models)):
-            X, y =datasets[i]
+            X, y = datasets[i]
             y_pred.append(self.models[i].predict(X))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
         y_pred = np.mean(y_pred, axis=-1).astype(int)
         return y_pred
-
