@@ -29,8 +29,12 @@ class FairBoost(object):
         self.dist_func = dist.cosine
         # ipdb.set_trace(context=6)
 
-    # Generates all "cleaned" data sets
-    # Returns an array of (X,y)
+    def __delete_protected(self, dataset):
+        index = []
+        for protected_attribute_name in dataset.protected_attribute_names:
+            index.append(dataset.feature_names.index(protected_attribute_name))
+        dataset.features = np.delete(dataset.features, index, axis=1)
+        return dataset
 
     def __transform(self, dataset, fit=False):
         '''
@@ -56,8 +60,9 @@ class FairBoost(object):
                 else:
                     p_data = ppf.transform(dataset)
                 sys.stdout = sys.__stdout__
-            pp_data.append(
-                (p_data.features, p_data.labels, p_data.instance_weights))
+            p_data = self.__delete_protected(p_data)
+            X, y, w = p_data.features, p_data.labels, p_data.instance_weights
+            pp_data.append((X, y, w))
         return pp_data
 
     def __get_avg_dist_arr(self, X):
