@@ -82,16 +82,18 @@ def main():
             # 'LFR': LFR(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
         }
 
-        # Apply standard scaler
-        # TODO: fit scaler on train and apply on test
-        dataset.features = StandardScaler().fit_transform(dataset.features)
-
         # split the data
         train_split, test_split = dataset.split([0.7], shuffle=True)
 
         # get X and y for training and test splits
         X_train, y_train = train_split.features, train_split.labels.ravel()
         X_test, y_test = test_split.features, test_split.labels.ravel()
+
+        # Apply standard scaler
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
 
         # Train model
         for clf_name, clf in classifiers.items():
@@ -110,15 +112,15 @@ def main():
             for debaiasing_algo_name, debaiasing_algo in debaiasing_algorithms.items():
                 # RW = Reweighing(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
 
-                if debaiasing_algo_name == "OptimPreproc":
-                    # Transform training data and align features
-                    debaiasing_algo = debaiasing_algo.fit(train_split)
-                    # Transform training data and align features
-                    train_split_transformed = debaiasing_algo.transform(train_split, transform_Y=True)
-                    train_split_transformed = train_split.align_datasets(train_split_transformed)
-                else:
-                    # TODO: apply transformation on test split
-                    train_split_transformed = debaiasing_algo.fit_transform(train_split)
+                # if debaiasing_algo_name == "OptiPreproc":
+                #     # Transform training data and align features
+                #     debaiasing_algo = debaiasing_algo.fit(train_split)
+                #     # Transform training data and align features
+                #     train_split_transformed = debaiasing_algo.transform(train_split, transform_Y=True)
+                #     train_split_transformed = train_split.align_datasets(train_split_transformed)
+                # else:
+                #     # TODO: apply transformation on test split
+                train_split_transformed = debaiasing_algo.fit_transform(train_split)
 
                 X_train, y_train = train_split_transformed.features, train_split_transformed.labels.ravel()
 
@@ -129,6 +131,7 @@ def main():
                 y_pred = clf.predict(X_test)
                 accuracy = accuracy_score(y_test, y_pred)
                 print(f'accuracy {accuracy} (with {debaiasing_algo_name})')
+
 
 
 if __name__ == "__main__":
