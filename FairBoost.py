@@ -58,7 +58,8 @@ class FairBoost(object):
                 else:
                     p_data = ppf.transform(dataset)
                 sys.stdout = sys.__stdout__
-            pp_data.append((p_data.features, p_data.labels))
+            pp_data.append(
+                (p_data.features, p_data.labels, p_data.instance_weights))
         return pp_data
 
     def __get_avg_dist_arr(self, X):
@@ -94,15 +95,17 @@ class FairBoost(object):
         '''
         Returns instances where the last feature is the label. 
                 Parameters:
-                        datasets (list): List with X and y pairs.
+                        datasets (list): List with X, y and weight pairs.
 
                 Returns:
                         res (np.array): List with concatenated X and y.
         '''
         res = []
         for dataset in datasets:
-            X, y = dataset[0], dataset[1]
-            m = np.concatenate([X, y], axis=-1)
+            X, y, w = dataset[0], dataset[1], np.expand_dims(
+                dataset[2], axis=-1)
+            print(f'{X.shape}, {y.shape}, {w.shape}')
+            m = np.concatenate([X, y, w], axis=-1)
             res.append(m)
         return np.array(res)
 
@@ -113,11 +116,11 @@ class FairBoost(object):
                         datasets (list): List with concatenated X and y. 
 
                 Returns:
-                        res (list<np.array>): List with X and y pairs.
+                        res (list<np.array>): List with X, y and weight pairs.
         '''
         res = []
         for dataset in datasets:
-            res.append((dataset[:, :-1], dataset[:, -1]))
+            res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
         return res
 
     def __initialize_bootstrap_datasets(self, datasets):
@@ -222,9 +225,9 @@ class FairBoost(object):
                         self
         '''
         datasets = self.__bootstrap_datasets(dataset)
-        for X_bootstrap, y_bootstrap in datasets:
+        for X_bootstrap, y_bootstrap, w in datasets:
             model = clone(self.model)
-            model.fit(X_bootstrap, y_bootstrap)
+            model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
             self.models.append(model)
         return self
 
@@ -240,7 +243,7 @@ class FairBoost(object):
         y_pred = []
         datasets = self.__transform(dataset)
         for i in range(len(self.models)):
-            X, y = datasets[i]
+            X, y, _ = datasets[i]
             y_pred.append(self.models[i].predict(X))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
