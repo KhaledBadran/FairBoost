@@ -61,22 +61,22 @@ class FairBoost(object):
             pp_data.append((p_data.features, p_data.labels))
         return pp_data
 
-    def __get_avg_dist_arr(self, data):
+    def __get_avg_dist_arr(self, X):
         '''
         For each instance in the initial data set, compute the average distance between the "cleaned" versions. 
                 Parameters:
-                        data (np.array): The concatenated X,y 
+                        X (np.array): features
 
                 Returns:
                         dist_arr (np.array): Array with the distance for each instance of each "cleaned" data set.
         '''
         # Swap the first two dimensions so we iterate over instances instead of data sets
-        data = data.transpose([1, 0, 2])
+        X = X.transpose([1, 0, 2])
         # Initializing the average distances array
         dist_arr = np.zeros(
-            shape=(len(data), len(self.preprocessing_functions)))
+            shape=(len(X), len(self.preprocessing_functions)))
         # Fill the avg distances array
-        for i, pp_instances in enumerate(data):
+        for i, pp_instances in enumerate(X):
             for j, pp_instance_j in enumerate(pp_instances):
                 distances = []
                 for k, pp_instance_k in enumerate(pp_instances):
@@ -195,7 +195,7 @@ class FairBoost(object):
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
         datasets = self.__transform(dataset, fit=True)
-        datasets = self.__merge_Xy(datasets)
+
         # If we do the custom bootstrapping, we must define a custom PDF
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
             dist_arrays = self.__get_avg_dist_arr(datasets)
@@ -203,6 +203,7 @@ class FairBoost(object):
         else:
             dist_arrays = [None for _ in range(len(datasets))]
 
+        datasets = self.__merge_Xy(datasets)
         bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
         bootstrap_datasets = self.__fill_boostrap_datasets(
             bootstrap_datasets, datasets, dist_arrays)
