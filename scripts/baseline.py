@@ -39,42 +39,51 @@ from aif360.sklearn.metrics import disparate_impact_ratio, average_odds_error
 import pandas as pd
 
 # Bias mitigation techniques
-from aif360.algorithms.preprocessing import Reweighing, DisparateImpactRemover
-from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions\
-        import load_preproc_data_adult, load_preproc_data_german, load_preproc_data_compas
+from aif360.algorithms.preprocessing import Reweighing, DisparateImpactRemover, LFR, OptimPreproc
+
+from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
+from constants import DATASETS
 
 np.random.seed(0)
 
 
 def main():
-    privileged_groups = [{'sex': 1}]
-    unprivileged_groups = [{'sex': 0}]
+    # sensitive_attribute = 'sex'
+    # privileged_groups = [{'sex': 1}]
+    # unprivileged_groups = [{'sex': 0}]
 
-    german_dataset = load_preproc_data_german(['sex'])
-    adult_dataset = load_preproc_data_adult(['sex'])
-    compas_dataset = load_preproc_data_compas(['sex'])
-
-
-    datasets = {'German': german_dataset,
-                'Adult': adult_dataset,
-                'compas': compas_dataset
-                }
+    # german_dataset = load_preproc_data_german(['sex'])
+    # adult_dataset = load_preproc_data_adult(['sex'])
+    # compas_dataset = load_preproc_data_compas(['sex'])
+    #
+    #
+    # datasets = {'German': german_dataset,
+    #             'Adult': adult_dataset,
+    #             'compas': compas_dataset
+    #             }
 
     classifiers = {
         "Logistic Regression": LogisticRegression(),
         "Random Forest": RandomForestClassifier(max_depth=2, n_estimators=2, max_features=1),
     }
 
-    # debaiasing_algo = {
-        # "Reweighing": Reweighing(),
-        # "DisparateImpactRemover": DisparateImpactRemover(),
-    # }
+    for dataset_name, dataset_info in DATASETS.items():
 
-    for dataset_name, dataset in datasets.items():
+        print(f'\n\n############## in dataset: {dataset_name} ###############\n')
+        dataset = dataset_info['original_dataset']
 
-        print(f'in dataset: {dataset_name}')
+        debaiasing_algorithms = {
+            "Reweighing": Reweighing(privileged_groups=dataset_info['privileged_groups'],
+                                     unprivileged_groups=dataset_info['unprivileged_groups']),
+            "DisparateImpactRemover": DisparateImpactRemover(sensitive_attribute=dataset_info['sensitive_attribute']),
+            # 'OptimPreproc': OptimPreproc(OptTools, dataset_info['optim_options'],
+            #                              unprivileged_groups=dataset_info['unprivileged_groups'],
+            #                              privileged_groups=dataset_info['privileged_groups'])
+            # 'LFR': LFR(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
+        }
 
         # Apply standard scaler
+        # TODO: fit scaler on train and apply on test
         dataset.features = StandardScaler().fit_transform(dataset.features)
 
         # split the data
@@ -98,19 +107,29 @@ def main():
             # print(f"fairness {fairness_metric}")
 
             # Apply debaiasing algorithm
-            RW = Reweighing(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
-            train_split_transformed = RW.fit_transform(train_split)
-            X_train, y_train = train_split_transformed.features, train_split_transformed.labels.ravel()
+            for debaiasing_algo_name, debaiasing_algo in debaiasing_algorithms.items():
+                # RW = Reweighing(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
 
-            # X_train = RW.transform(X_train)
-            print(f'\nevaluating classifier {clf_name} after reweighing')
-            clf.fit(X_train, y_train)
+                if debaiasing_algo_name == "OptimPreproc":
+                    # Transform training data and align features
+                    debaiasing_algo = debaiasing_algo.fit(train_split)
+                    # Transform training data and align features
+                    train_split_transformed = debaiasing_algo.transform(train_split, transform_Y=True)
+                    train_split_transformed = train_split.align_datasets(train_split_transformed)
+                else:
+                    # TODO: apply transformation on test split
+                    train_split_transformed = debaiasing_algo.fit_transform(train_split)
 
-            y_pred = clf.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
-            print(f'accuracy {accuracy} (with reweighing)')
+                X_train, y_train = train_split_transformed.features, train_split_transformed.labels.ravel()
+
+                # X_train = RW.transform(X_train)
+                print(f'\nevaluating classifier {clf_name} after {debaiasing_algo_name}')
+                clf.fit(X_train, y_train)
+
+                y_pred = clf.predict(X_test)
+                accuracy = accuracy_score(y_test, y_pred)
+                print(f'accuracy {accuracy} (with {debaiasing_algo_name})')
 
 
 if __name__ == "__main__":
     main()
-
