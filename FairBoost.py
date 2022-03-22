@@ -14,8 +14,6 @@ class Bootstrap_type(Enum):
     DEFAULT = 2
     CUSTOM = 3
 
-# Note: FairBoost tries to replicate sklearn API
-
 
 class FairBoost(object):
     def __init__(self, model, preprocessing_functions, bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
