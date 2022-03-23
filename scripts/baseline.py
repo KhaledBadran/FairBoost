@@ -9,11 +9,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 from sklearn.model_selection import GridSearchCV
 
-sys.path.insert(0, '../')
-
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import Markdown, display
+import pandas as pd
 
 # Datasets
 from aif360.datasets import AdultDataset
@@ -24,6 +23,7 @@ from aif360.sklearn.datasets import fetch_german
 # Fairness metrics
 from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.metrics import ClassificationMetric
+from aif360.datasets import BinaryLabelDataset
 
 # Explainers
 from aif360.explainers import MetricTextExplainer
@@ -37,101 +37,174 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from aif360.sklearn.metrics import disparate_impact_ratio, average_odds_error
 import pandas as pd
+import json
 
 # Bias mitigation techniques
-from aif360.algorithms.preprocessing import Reweighing, DisparateImpactRemover, LFR, OptimPreproc
+from aif360.algorithms.preprocessing import (
+    Reweighing,
+    DisparateImpactRemover,
+    LFR,
+    OptimPreproc,
+)
 
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
-from constants import DATASETS
+from constants import DATASETS, CLASSIFIERS
+
+from collections import defaultdict
 
 np.random.seed(0)
 
 
-def main():
-    # sensitive_attribute = 'sex'
-    # privileged_groups = [{'sex': 1}]
-    # unprivileged_groups = [{'sex': 0}]
+def train_test_models(train_dataset, test_dataset, dataset_info):
+    results = defaultdict(dict)
 
-    # german_dataset = load_preproc_data_german(['sex'])
-    # adult_dataset = load_preproc_data_adult(['sex'])
-    # compas_dataset = load_preproc_data_compas(['sex'])
-    #
-    #
-    # datasets = {'German': german_dataset,
-    #             'Adult': adult_dataset,
-    #             'compas': compas_dataset
-    #             }
+    # Train models
+    X_train, y_train = train_dataset.features, train_dataset.labels.ravel()
+    X_test, y_test = test_dataset.features, test_dataset.labels.ravel()
 
-    classifiers = {
-        "Logistic Regression": LogisticRegression(),
-        "Random Forest": RandomForestClassifier(max_depth=2, n_estimators=2, max_features=1),
+    for clf_name, clf in CLASSIFIERS.items():
+        print(f"\nevaluating classifier {clf_name}")
+        clf.fit(X_train, y_train, sample_weight=train_dataset.instance_weights)
+
+        y_pred = clf.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f"accuracy {accuracy}")
+
+        classified_dataset = test_dataset.copy()
+        classified_dataset.labels = y_pred
+        classification_metric = ClassificationMetric(
+            dataset=test_dataset,
+            classified_dataset=classified_dataset,
+            unprivileged_groups=dataset_info["unprivileged_groups"],
+            privileged_groups=dataset_info["privileged_groups"],
+        )
+        print(f"disparate impact {classification_metric.disparate_impact()}")
+        print(
+            f"average odds difference {classification_metric.average_odds_difference()}"
+        )
+
+        results[clf_name] = {
+            "accuracy": accuracy,
+            "disparate_impact": classification_metric.disparate_impact(),
+            "average_odds_difference": classification_metric.average_odds_difference(),
+        }
+
+    return dict(results)
+
+# @typehceck
+def initial_preprocessing(train_dataset: BinaryLabelDataset, test_dataset):
+    # get X and y for training and test splits
+    X_train, y_train = train_dataset.features, train_dataset.labels.ravel()
+    X_test, y_test = test_dataset.features, test_dataset.labels.ravel()
+
+    # Apply standard scaler
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    train_dataset_preprocessed = train_dataset.copy()
+    train_dataset_preprocessed.features = X_train
+
+    test_dataset_preprocessed = test_dataset.copy()
+    test_dataset_preprocessed.features = X_test
+
+    return train_dataset_preprocessed, test_dataset_preprocessed
+
+
+def apply_preprocessing_algo(
+    algo_name,
+    transformer,
+    train_dataset: BinaryLabelDataset,
+    test_dataset: BinaryLabelDataset,
+    dataset_info,
+):
+
+    if algo_name == "Reweighing":
+        # RW = Reweighing(privileged_groups=dataset_info['privileged_groups'],
+        #                 unprivileged_groups=dataset_info['unprivileged_groups'])
+        train_dataset_transformed = transformer.fit_transform(train_dataset)
+        test_dataset_transformed = test_dataset.copy()
+
+    elif algo_name == "DisparateImpactRemover":
+        # DIR = DisparateImpactRemover(sensitive_attribute=dataset_info['sensitive_attribute'])
+
+        index = train_dataset.feature_names.index(dataset_info["sensitive_attribute"])
+
+        train_dataset_transformed = transformer.fit_transform(train_dataset)
+        test_dataset_transformed = transformer.fit_transform(test_dataset)
+
+        # delete protected columns
+        train_dataset_transformed.features = np.delete(
+            train_dataset_transformed.features, index, axis=1
+        )
+        test_dataset_transformed.features = np.delete(
+            test_dataset_transformed.features, index, axis=1
+        )
+
+    return (
+        train_dataset_transformed,
+        test_dataset_transformed,
+    )
+
+
+def initialize_debaiasing_algorithms(dataset_info):
+    return {
+        "Reweighing": Reweighing(
+            privileged_groups=dataset_info["privileged_groups"],
+            unprivileged_groups=dataset_info["unprivileged_groups"],
+        ),
+        "DisparateImpactRemover": DisparateImpactRemover(
+            sensitive_attribute=dataset_info["sensitive_attribute"]
+        ),
+        # "OptimPreproc": OptimPreproc(
+        #     OptTools,
+        #     dataset_info["optim_options"],
+        #     unprivileged_groups=dataset_info["unprivileged_groups"],
+        #     privileged_groups=dataset_info["privileged_groups"],
+        # )
+        # 'LFR': LFR(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
     }
+
+
+def main():
+
+    results = defaultdict(dict)
 
     for dataset_name, dataset_info in DATASETS.items():
 
-        print(f'\n\n############## in dataset: {dataset_name} ###############\n')
-        dataset = dataset_info['original_dataset']
+        print(f"\n\n$$$$in dataset {dataset_name}$$$$$\n")
 
-        debaiasing_algorithms = {
-            "Reweighing": Reweighing(privileged_groups=dataset_info['privileged_groups'],
-                                     unprivileged_groups=dataset_info['unprivileged_groups']),
-            "DisparateImpactRemover": DisparateImpactRemover(sensitive_attribute=dataset_info['sensitive_attribute']),
-            # 'OptimPreproc': OptimPreproc(OptTools, dataset_info['optim_options'],
-            #                              unprivileged_groups=dataset_info['unprivileged_groups'],
-            #                              privileged_groups=dataset_info['privileged_groups'])
-            # 'LFR': LFR(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
-        }
+        dataset = dataset_info["original_dataset"]
 
-        # split the data
+        debaiasing_algorithms = initialize_debaiasing_algorithms(
+            dataset_info=dataset_info
+        )
+
         train_split, test_split = dataset.split([0.7], shuffle=True)
+        train_split, test_split = initial_preprocessing(train_split, test_split)
+        results[dataset_name]["baseline"] = train_test_models(
+            train_split, test_split, dataset_info=dataset_info
+        )
 
-        # get X and y for training and test splits
-        X_train, y_train = train_split.features, train_split.labels.ravel()
-        X_test, y_test = test_split.features, test_split.labels.ravel()
+        for (debaiasing_algo_name,debaiasing_transformer,) in debaiasing_algorithms.items():
+            print(f"\n\n####After applying {debaiasing_algo_name}######\n")
 
-        # Apply standard scaler
-        scaler = StandardScaler()
-        scaler.fit(X_train)
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
+            train_split_transformed, test_split_transformed = apply_preprocessing_algo(
+                debaiasing_algo_name,
+                debaiasing_transformer,
+                train_split,
+                test_split,
+                dataset_info,
+            )
 
-        # Train model
-        for clf_name, clf in classifiers.items():
-            print(f'\nevaluating classifier {clf_name}')
-            clf.fit(X_train, y_train)
+            results[dataset_name][debaiasing_algo_name] = train_test_models(
+                train_split_transformed,
+                test_split_transformed,
+                dataset_info=dataset_info,
+            )
 
-            y_pred = clf.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
-            print(f'accuracy {accuracy}')
-
-            # parity gap
-            # fairness_metric = average_odds_error(y_test, y_pred, prot_attr='sex')
-            # print(f"fairness {fairness_metric}")
-
-            # Apply debaiasing algorithm
-            for debaiasing_algo_name, debaiasing_algo in debaiasing_algorithms.items():
-                # RW = Reweighing(privileged_groups=privileged_groups, unprivileged_groups=unprivileged_groups)
-
-                # if debaiasing_algo_name == "OptiPreproc":
-                #     # Transform training data and align features
-                #     debaiasing_algo = debaiasing_algo.fit(train_split)
-                #     # Transform training data and align features
-                #     train_split_transformed = debaiasing_algo.transform(train_split, transform_Y=True)
-                #     train_split_transformed = train_split.align_datasets(train_split_transformed)
-                # else:
-                #     # TODO: apply transformation on test split
-                train_split_transformed = debaiasing_algo.fit_transform(train_split)
-
-                X_train, y_train = train_split_transformed.features, train_split_transformed.labels.ravel()
-
-                # X_train = RW.transform(X_train)
-                print(f'\nevaluating classifier {clf_name} after {debaiasing_algo_name}')
-                clf.fit(X_train, y_train)
-
-                y_pred = clf.predict(X_test)
-                accuracy = accuracy_score(y_test, y_pred)
-                print(f'accuracy {accuracy} (with {debaiasing_algo_name})')
-
+    print(json.dumps(results, indent=4))
 
 
 if __name__ == "__main__":
