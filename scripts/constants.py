@@ -4,6 +4,8 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.distortion_functions\
             import get_distortion_adult, get_distortion_german, get_distortion_compas
 from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions\
         import load_preproc_data_adult, load_preproc_data_german, load_preproc_data_compas
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 
 DATASETS = {
     'german': {
@@ -45,4 +47,9 @@ DATASETS = {
     }
 }
 
+
+CLASSIFIERS = {
+    "Logistic Regression": LogisticRegression(),
+    "Random Forest": RandomForestClassifier(max_depth=10, n_estimators=5, max_features=2)
+}
 
