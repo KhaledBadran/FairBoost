@@ -7,6 +7,7 @@ import os
 import sys
 from typeguard import typechecked
 from enum import Enum
+from aif360.datasets import BinaryLabelDataset
 
 from .wrappers import Preprocessing
 
@@ -32,13 +33,6 @@ class FairBoost(object):
         self.dist_func = dist.cosine
         # ipdb.set_trace(context=6)
 
-    def __delete_protected(self, dataset):
-        index = []
-        for protected_attribute_name in dataset.protected_attribute_names:
-            index.append(dataset.feature_names.index(protected_attribute_name))
-        dataset.features = np.delete(dataset.features, index, axis=1)
-        return dataset
-
     def __quiet(self, func, args):
         with warnings.catch_warnings():
             sys.stdout = open(os.devnull, 'w')
@@ -47,13 +41,12 @@ class FairBoost(object):
             sys.stdout = sys.__stdout__
         return res
 
-    def __transform(self, dataset, fit=False):
+    def __transform(self, dataset: BinaryLabelDataset, fit=False) -> list[tuple]:
         '''
         Preprocess data set using each pre-processing function.
 
                 Parameters:
-                        X: Features
-                        y: Labels
+                        dataset
 
                 Returns:
                         pp_data (list): List with the different preprocessed data sets
@@ -65,11 +58,10 @@ class FairBoost(object):
             # Call fit_transform or transform depending on Fairboost stage
             func = ppf.fit_transform if fit else ppf.transform
             d = self.__quiet(func, [dataset])
-            # p_data = self.__delete_protected(p_data)
             pp_data.append(d)
         return pp_data
 
-    def __get_avg_dist_arr(self, X):
+    def __get_avg_dist_arr(self, datasets: list) -> np.array:
         '''
         For each instance in the initial data set, compute the average distance between the "cleaned" versions. 
                 Parameters:
@@ -78,6 +70,7 @@ class FairBoost(object):
                 Returns:
                         dist_arr (np.array): Array with the distance for each instance of each "cleaned" data set.
         '''
+        X = np.array(datasets[:][0])
         # Swap the first two dimensions so we iterate over instances instead of data sets
         X = X.transpose([1, 0, 2])
         # Initializing the average distances array
@@ -97,15 +90,14 @@ class FairBoost(object):
         dist_arr = dist_arr.transpose([1, 0])
         return dist_arr
 
-    # Adds y to the last column of X for a list of (X,y)
-    def __merge_Xy(self, datasets):
+    def __merge_Xyw(self, datasets: list[tuple]) -> np.array:
         '''
         Returns instances where the last feature is the label. 
                 Parameters:
-                        datasets (list): List with X, y and weight pairs.
+                        datasets: List with X, y and weight pairs.
 
                 Returns:
-                        res (np.array): List with concatenated X and y.
+                        res: List with concatenated X and y.
         '''
         res = []
         for dataset in datasets:
@@ -115,28 +107,28 @@ class FairBoost(object):
             res.append(m)
         return np.array(res)
 
-    def __unmerge_Xy(self, datasets):
+    def __unmerge_Xy(self, datasets: list[np.array]) -> list[tuple]:
         '''
         Return X,y from a dataset where y is the last column 
                 Parameters:
-                        datasets (list): List with concatenated X and y. 
+                        datasets: List with concatenated X and y. 
 
                 Returns:
-                        res (list<np.array>): List with X, y and weight pairs.
+                        res: List with X, y and weight pairs.
         '''
         res = []
         for dataset in datasets:
             res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
         return res
 
-    def __initialize_bootstrap_datasets(self, datasets):
+    def __initialize_bootstrap_datasets(self, datasets: np.array) -> list[np.array]:
         '''
         Assign each instance of a data set to one of the bootstrap data sets. 
                 Parameters:
-                        datasets (list<np.array>): List with concatenated X and y. 
+                        datasets: List with concatenated X, y and weights. 
 
                 Returns:
-                        bootstrap_datasets (list<np.array>): List with the bootstrap data sets.
+                        bootstrap_datasets: List with the bootstrap data sets.
         '''
         bootstrap_datasets = []
         # Generate indexes array assigns each instance to
@@ -147,13 +139,13 @@ class FairBoost(object):
             bootstrap_datasets.append(dataset[indexes == i])
         return bootstrap_datasets
 
-    def __fill_boostrap_datasets(self, bootstrap_datasets, datasets, p_arrays):
+    def __fill_boostrap_datasets(self, bootstrap_datasets: list[np.array], datasets: np.array, p_arrays: list) -> list[np.array]:
         '''
         Fills the bootstrap data set to the desired size. 
                 Parameters:
-                        bootstrap_datasets (list<np.array>): List with the bootstrap data sets.
-                        datasets (list<np.array>): List with concatenated X and y. 
-                        p_arrays(list<np.array>): Probability of an instance to be picked in the bootstrap process.
+                        bootstrap_datasets: List with the bootstrap data sets.
+                        datasets:           List with concatenated X, y and w. 
+                        p_arrays:           Probability of an instance to be picked in the bootstrap process.
 
                 Returns:
                         bootstrap_datasets (list): List with the bootstrap data sets.
@@ -169,11 +161,11 @@ class FairBoost(object):
                 (bootstrap_datasets[i], dataset[indexes]))
         return bootstrap_datasets
 
-    def __normalize(self, arrays):
+    def __normalize(self, arrays: np.array):
         '''
         Does a array-wise normalization of values/ 
                 Parameters:
-                        arrays (np.array): A "list" of arrays to normalize.
+                        arrays: A "list" of arrays to normalize.
 
                 Returns:
                         n_arr (np.array): Normalized arrays.
@@ -194,12 +186,11 @@ class FairBoost(object):
 
     # Generate the boostrap data sets
     # Returns a list of (X,y)
-    def __bootstrap_datasets(self, dataset):
+    def __bootstrap_datasets(self, dataset: BinaryLabelDataset) -> list[tuple]:
         '''
         Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
                 Parameters:
-                        X: features
-                        y: labels
+                        dataset
 
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
@@ -213,7 +204,7 @@ class FairBoost(object):
         else:
             dist_arrays = [None for _ in range(len(datasets))]
 
-        datasets = self.__merge_Xy(datasets)
+        datasets = self.__merge_Xyw(datasets)
         bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
         bootstrap_datasets = self.__fill_boostrap_datasets(
             bootstrap_datasets, datasets, dist_arrays)
@@ -221,12 +212,11 @@ class FairBoost(object):
         bootstrap_datasets = self.__unmerge_Xy(bootstrap_datasets)
         return bootstrap_datasets
 
-    def fit(self, dataset):
+    def fit(self, dataset: BinaryLabelDataset):
         '''
         Fit function as per Sklearn API.
                 Parameters:
-                        X: features
-                        y: labels
+                        dataset
 
                 Returns:
                         self
@@ -238,11 +228,11 @@ class FairBoost(object):
             self.models.append(model)
         return self
 
-    def predict(self, dataset):
+    def predict(self, dataset: BinaryLabelDataset) -> np.array:
         '''
         Predict function as per Sklearn API.
                 Parameters:
-                        X: features
+                        dataset
 
                 Returns:
                         y_pred: Predicted labels.

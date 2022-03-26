@@ -1,4 +1,5 @@
 # import ipdb
+import numpy as np
 
 
 class Preprocessing:
@@ -20,6 +21,13 @@ class Preprocessing:
 
 
 class DIR(Preprocessing):
+    # def __delete_protected(self, dataset):
+    #     index = []
+    #     for protected_attribute_name in dataset.protected_attribute_names:
+    #         index.append(dataset.feature_names.index(protected_attribute_name))
+    #     dataset.features = np.delete(dataset.features, index, axis=1)
+    #     return dataset
+
     def transform(self, dataset):
         return super().fit_transform(dataset)
 
