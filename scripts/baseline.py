@@ -49,7 +49,7 @@ from aif360.algorithms.preprocessing import (
 )
 
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
-from constants import DATASETS, CLASSIFIERS
+from constants import DATASETS, CLASSIFIERS, HYPERPARAMETERS
 
 from collections import defaultdict
 
@@ -126,14 +126,14 @@ def initial_preprocessing(train_dataset: BinaryLabelDataset, test_dataset):
 
 def apply_preprocessing_algo(
     algo_name,
-    algo_transformer,
+    # algo_transformer,
     train_dataset: BinaryLabelDataset,
     test_dataset: BinaryLabelDataset,
     dataset_info,
 ):
 
     # Copy the transformer to avoid bugs
-    transformer = copy.deepcopy(algo_transformer)
+    # transformer = copy.deepcopy(algo_transformer)
 
     # Initialize the transformed datasets
     train_dataset_transformed = train_dataset.copy(deepcopy=True)
@@ -141,18 +141,21 @@ def apply_preprocessing_algo(
 
     try:
         if algo_name == "Reweighing":
-            # RW = Reweighing(privileged_groups=dataset_info['privileged_groups'],
-            #                 unprivileged_groups=dataset_info['unprivileged_groups'])
-            train_dataset_transformed = transformer.fit_transform(train_dataset)
+            RW = Reweighing(
+                privileged_groups=dataset_info["privileged_groups"],
+                unprivileged_groups=dataset_info["unprivileged_groups"],
+            )
+            train_dataset_transformed = RW.fit_transform(train_dataset)
             test_dataset_transformed = test_dataset.copy(deepcopy=True)
 
         elif algo_name == "DisparateImpactRemover":
-            # DIR = DisparateImpactRemover(sensitive_attribute=dataset_info['sensitive_attribute'])
-
+            DIR = DisparateImpactRemover(
+                sensitive_attribute=dataset_info["sensitive_attribute"]
+            )
             index = train_dataset.feature_names.index(dataset_info["sensitive_attribute"])
 
-            train_dataset_transformed = transformer.fit_transform(train_dataset)
-            test_dataset_transformed = transformer.fit_transform(test_dataset)
+            train_dataset_transformed = DIR.fit_transform(train_dataset)
+            test_dataset_transformed = DIR.fit_transform(test_dataset)
 
             # delete protected columns
             train_dataset_transformed.features = np.delete(
@@ -164,22 +167,31 @@ def apply_preprocessing_algo(
 
         elif algo_name == "OptimPreproc":
 
-            transformer = transformer.fit(train_dataset)
-            train_dataset_transformed = transformer.transform(train_dataset, transform_Y=True)
+            OP = OptimPreproc(
+                OptTools,
+                dataset_info["optim_options"],
+                verbose=False)
+
+            OP = OP.fit(train_dataset)
+            train_dataset_transformed = OP.transform(train_dataset, transform_Y=True)
 
             train_dataset_transformed = train_dataset.align_datasets(train_dataset_transformed)
 
-            test_dataset_transformed = transformer.transform(test_dataset, transform_Y=True)
+            test_dataset_transformed = OP.transform(test_dataset, transform_Y=True)
             test_dataset_transformed = test_dataset.align_datasets(test_dataset_transformed)
 
         elif algo_name == "LFR":
 
-            transformer = transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
+            LFR_transformer = LFR(unprivileged_groups=dataset_info['unprivileged_groups'],
+                privileged_groups=dataset_info['privileged_groups'],
+                k=5, Ax=0.01, Ay=1.0, Az=50.0, verbose=0  # Default parameters
+                )
+
+            LFR_transformer = LFR_transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
 
             # Transform training data and align features
-            train_dataset_transformed = transformer.transform(train_dataset, threshold=0.35)
-            test_dataset_transformed = transformer.transform(test_dataset, threshold=0.35)
-
+            train_dataset_transformed = LFR_transformer.transform(train_dataset, threshold=0.35)
+            test_dataset_transformed = LFR_transformer.transform(test_dataset, threshold=0.35)
 
 
     except Exception as e:
@@ -226,9 +238,9 @@ def main():
 
         dataset = dataset_info["original_dataset"]
 
-        debaiasing_algorithms = initialize_debaiasing_algorithms(
-            dataset_info=dataset_info
-        )
+        # debaiasing_algorithms = initialize_debaiasing_algorithms(
+        #     dataset_info=dataset_info
+        # )
 
         train_split, test_split = dataset.split([0.7], shuffle=True, seed=0)
         # train_split, test_split = initial_preprocessing(train_split, test_split)
@@ -236,12 +248,11 @@ def main():
             train_split, test_split, dataset_info=dataset_info
         )
 
-        for (debaiasing_algo_name, debaiasing_transformer,) in debaiasing_algorithms.items():
+        for (debaiasing_algo_name, hyperparameters,) in HYPERPARAMETERS.items():
             print(f"\n\n####After applying {debaiasing_algo_name}######\n")
 
             train_split_transformed, test_split_transformed = apply_preprocessing_algo(
                 debaiasing_algo_name,
-                debaiasing_transformer,
                 train_split.copy(deepcopy=True),
                 test_split.copy(deepcopy=True),
                 dataset_info,
@@ -254,7 +265,7 @@ def main():
             )
 
     # print(json.dumps(results, indent=4))
-    with open('results.json', 'w') as fp:
+    with open('results_2.json', 'w') as fp:
         json.dump(results, fp, indent=4)
 
 if __name__ == "__main__":

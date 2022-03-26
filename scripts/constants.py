@@ -53,3 +53,9 @@ CLASSIFIERS = {
     "Random Forest": RandomForestClassifier(max_depth=10, n_estimators=5, max_features=2)
 }
 
+HYPERPARAMETERS = {
+    "Reweighing": [{}],
+    "DisparateImpactRemover": [{'threshold': 0.01}, {'threshold': 0.5}, {'threshold': 0.5}],
+    "OptimPreproc": [{}],
+    "LFR": [{}],
+}
