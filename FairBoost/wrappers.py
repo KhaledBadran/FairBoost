@@ -21,6 +21,7 @@ class Preprocessing:
 
 
 class DIR(Preprocessing):
+    # TODO: what do we do with deletion of private attribs
     # def __delete_protected(self, dataset):
     #     index = []
     #     for protected_attribute_name in dataset.protected_attribute_names:

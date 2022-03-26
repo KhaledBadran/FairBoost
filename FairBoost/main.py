@@ -8,6 +8,7 @@ import sys
 from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
+from scipy.special import softmax
 
 from .wrappers import Preprocessing
 
@@ -61,7 +62,7 @@ class FairBoost(object):
             pp_data.append(d)
         return pp_data
 
-    def __get_avg_dist_arr(self, datasets: list) -> np.array:
+    def __get_avg_dist_arr(self, datasets: np.array) -> np.array:
         '''
         For each instance in the initial data set, compute the average distance between the "cleaned" versions. 
                 Parameters:
@@ -70,14 +71,15 @@ class FairBoost(object):
                 Returns:
                         dist_arr (np.array): Array with the distance for each instance of each "cleaned" data set.
         '''
-        X = np.array(datasets[:][0])
+        # Remove weights from dataset
+        datasets = datasets[:, :, :-1]
         # Swap the first two dimensions so we iterate over instances instead of data sets
-        X = X.transpose([1, 0, 2])
+        datasets = datasets.transpose([1, 0, 2])
         # Initializing the average distances array
         dist_arr = np.zeros(
-            shape=(len(X), len(self.preprocessing_functions)))
+            shape=(len(datasets), len(self.preprocessing_functions)))
         # Fill the avg distances array
-        for i, pp_instances in enumerate(X):
+        for i, pp_instances in enumerate(datasets):
             for j, pp_instance_j in enumerate(pp_instances):
                 distances = []
                 for k, pp_instance_k in enumerate(pp_instances):
@@ -161,31 +163,9 @@ class FairBoost(object):
                 (bootstrap_datasets[i], dataset[indexes]))
         return bootstrap_datasets
 
-    def __normalize(self, arrays: np.array):
-        '''
-        Does a array-wise normalization of values/ 
-                Parameters:
-                        arrays: A "list" of arrays to normalize.
-
-                Returns:
-                        n_arr (np.array): Normalized arrays.
-        '''
-        # TODO: use softmax instead of division by sum
-        n_arr = []
-        for arr in arrays:
-            s = np.sum(arr)
-            # Avoid divisions by zero
-            if s == 0:
-                n = np.ones(arr.shape)
-                s = np.sum(n)
-                n = n/s
-            else:
-                n = arr/s
-            n_arr.append(n)
-        return np.array(n_arr)
-
     # Generate the boostrap data sets
     # Returns a list of (X,y)
+
     def __bootstrap_datasets(self, dataset: BinaryLabelDataset) -> list[tuple]:
         '''
         Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
@@ -196,15 +176,15 @@ class FairBoost(object):
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
         datasets = self.__transform(dataset, fit=True)
+        datasets = self.__merge_Xyw(datasets)
 
         # If we do the custom bootstrapping, we must define a custom PDF
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
             dist_arrays = self.__get_avg_dist_arr(datasets)
-            dist_arrays = self.__normalize(dist_arrays)
+            dist_arrays = softmax(dist_arrays, axis=1).tolist()
         else:
             dist_arrays = [None for _ in range(len(datasets))]
 
-        datasets = self.__merge_Xyw(datasets)
         bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
         bootstrap_datasets = self.__fill_boostrap_datasets(
             bootstrap_datasets, datasets, dist_arrays)
