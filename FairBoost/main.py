@@ -55,7 +55,7 @@ class FairBoost(object):
             # Call fit_transform or transform depending on Fairboost stage
             func = ppf.fit_transform if fit else ppf.transform
             p_data = self.__quiet(func, [dataset])
-            p_data = self.__delete_protected(p_data)
+            # p_data = self.__delete_protected(p_data)
             X, y, w = p_data.features, p_data.labels, p_data.instance_weights
             pp_data.append((X, y, w))
         return pp_data
