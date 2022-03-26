@@ -30,6 +30,14 @@ class FairBoost(object):
         dataset.features = np.delete(dataset.features, index, axis=1)
         return dataset
 
+    def __quiet(self, func, args):
+        with warnings.catch_warnings():
+            sys.stdout = open(os.devnull, 'w')
+            warnings.simplefilter("ignore")
+            res = func(*args)
+            sys.stdout = sys.__stdout__
+        return res
+
     def __transform(self, dataset, fit=False):
         '''
         Preprocess data set using each pre-processing function.
@@ -43,17 +51,10 @@ class FairBoost(object):
         '''
         pp_data = []
         for ppf in self.preprocessing_functions:
-            print(type(ppf).__name__)
-            # Turning off prints and warnings
-            with warnings.catch_warnings():
-                sys.stdout = open(os.devnull, 'w')
-                warnings.simplefilter("ignore")
-
-                if fit:
-                    p_data = ppf.fit_transform(dataset)
-                else:
-                    p_data = ppf.transform(dataset)
-                sys.stdout = sys.__stdout__
+            print(f'Transforming data set with: {type(ppf).__name__}')
+            # Call fit_transform or transform depending on Fairboost stage
+            func = ppf.fit_transform if fit else ppf.transform
+            p_data = self.__quiet(func, [dataset])
             p_data = self.__delete_protected(p_data)
             X, y, w = p_data.features, p_data.labels, p_data.instance_weights
             pp_data.append((X, y, w))
