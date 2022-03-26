@@ -50,14 +50,14 @@ class FairBoost(object):
                         pp_data (list): List with the different preprocessed data sets
         '''
         pp_data = []
+        print(f'Transforming data set with:')
         for ppf in self.preprocessing_functions:
-            print(f'Transforming data set with: {type(ppf).__name__}')
+            print(f'\t-{ppf}')
             # Call fit_transform or transform depending on Fairboost stage
             func = ppf.fit_transform if fit else ppf.transform
-            p_data = self.__quiet(func, [dataset])
+            d = self.__quiet(func, [dataset])
             # p_data = self.__delete_protected(p_data)
-            X, y, w = p_data.features, p_data.labels, p_data.instance_weights
-            pp_data.append((X, y, w))
+            pp_data.append(d)
         return pp_data
 
     def __get_avg_dist_arr(self, X):
@@ -102,7 +102,6 @@ class FairBoost(object):
         for dataset in datasets:
             X, y, w = dataset[0], dataset[1], np.expand_dims(
                 dataset[2], axis=-1)
-            print(f'{X.shape}, {y.shape}, {w.shape}')
             m = np.concatenate([X, y, w], axis=-1)
             res.append(m)
         return np.array(res)
