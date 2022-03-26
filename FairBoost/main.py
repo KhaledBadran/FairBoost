@@ -6,13 +6,7 @@ import warnings
 import os
 import sys
 
-from enum import Enum
-
-
-class Bootstrap_type(Enum):
-    NONE = 1
-    DEFAULT = 2
-    CUSTOM = 3
+from .helper_classes import Bootstrap_type
 
 
 class FairBoost(object):
