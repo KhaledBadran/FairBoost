@@ -1,11 +1,4 @@
-from enum import Enum
-import ipdb
-
-
-class Bootstrap_type(Enum):
-    NONE = 1
-    DEFAULT = 2
-    CUSTOM = 3
+# import ipdb
 
 
 class Preprocessing:
@@ -24,3 +17,20 @@ class Preprocessing:
     def transform(self, dataset):
         d = self.preprocessing.transform(dataset, **self.transform_params)
         return d.features, d.labels, d.instance_weights
+
+
+class DIR(Preprocessing):
+    def transform(self, dataset):
+        return super().fit_transform(dataset)
+
+
+class OptimPreproc(Preprocessing):
+    pass
+
+
+class Reweighing(Preprocessing):
+    pass
+
+
+class LFR(Preprocessing):
+    pass

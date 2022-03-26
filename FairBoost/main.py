@@ -5,12 +5,21 @@ import scipy.spatial.distance as dist
 import warnings
 import os
 import sys
+from typeguard import typechecked
+from enum import Enum
 
-from .helper_classes import Bootstrap_type
+from .wrappers import Preprocessing
 
 
+class Bootstrap_type(Enum):
+    NONE = 1
+    DEFAULT = 2
+    CUSTOM = 3
+
+
+@typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions, bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
+    def __init__(self, model, preprocessing_functions: list[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
@@ -169,6 +178,7 @@ class FairBoost(object):
                 Returns:
                         n_arr (np.array): Normalized arrays.
         '''
+        # TODO: use softmax instead of division by sum
         n_arr = []
         for arr in arrays:
             s = np.sum(arr)
