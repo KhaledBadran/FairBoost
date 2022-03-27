@@ -61,7 +61,6 @@ CLASSIFIERS = {
     ),
 }
 
-
 # Define parameter grid https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.ParameterGrid.html
 DisparateImpactRemover_param_grid = {'repair_level': [0.01, 0.5, 1.0],}
 LFR_param_grid = {"k": [5], "Ax": [0.01], "Ay": [1.0], "Az": [50.0], "threshold": [0.01, 0.5, 0.1]}

@@ -293,20 +293,15 @@ def apply_preprocessing_algo(
 def main():
     results = defaultdict(dict)
 
-    # iterate over the datasets (german, aduly, compas)
     for dataset_name, dataset_info in DATASETS.items():
 
         print(f"\n\n$$$$in dataset {dataset_name}$$$$$\n")
 
-        # obtain the full dataset
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         train_split, test_split = dataset.split([0.7], shuffle=True, seed=0)
-
-        # TODO: figure out how to run OptimPreproc with Scaling transformation
         # train_split, test_split = initial_preprocessing(train_split, test_split)
 
-        # Train and test model and record the baseline eresults
         results[dataset_name]["baseline"] = train_test_models(
             train_split, test_split, dataset_info=dataset_info
         )
@@ -342,9 +337,9 @@ def main():
                     {"hyperparameters": hyperparameters, "results": performance_metrics}
                 )
     # save the results to file
-    with open("results_6.json", "w") as fp:
-        json.dump(results, fp, indent=4)
 
+    with open("results.json", "w") as fp:
+        json.dump(results, fp, indent=4)
 
 if __name__ == "__main__":
     main()
