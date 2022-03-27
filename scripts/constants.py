@@ -12,6 +12,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_function
 )
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import ParameterGrid
 
 DATASETS = {
     "german": {
@@ -60,17 +61,14 @@ CLASSIFIERS = {
     ),
 }
 
+
+# Define parameter grid https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.ParameterGrid.html
+DisparateImpactRemover_param_grid = {'repair_level': [0.01, 0.5, 1.0],}
+LFR_param_grid = {"k": [5], "Ax": [0.01], "Ay": [1.0], "Az": [50.0], "threshold": [0.01, 0.5, 0.1]}
+
 HYPERPARAMETERS = {
     "Reweighing": [{}],
-    "DisparateImpactRemover": [
-        {"repair_level": 0.01},
-        {"repair_level": 0.5},
-        {"repair_level": 0.5},
-    ],
+    "DisparateImpactRemover": list(ParameterGrid(DisparateImpactRemover_param_grid)),
     "OptimPreproc": [{}],
-    "LFR": [
-        {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0, "threshold": 0.01},
-        {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0, "threshold": 0.5},
-        {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0, "threshold": 0.1},
-    ],
+    "LFR": list(ParameterGrid(LFR_param_grid)),
 }
