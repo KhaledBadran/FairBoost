@@ -9,8 +9,9 @@ from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
 from scipy.special import softmax
+from typing import List, Tuple
 
-from .wrappers import Preprocessing
+from FairBoost.wrappers import Preprocessing
 
 
 class Bootstrap_type(Enum):
@@ -21,7 +22,7 @@ class Bootstrap_type(Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: list[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
@@ -42,7 +43,7 @@ class FairBoost(object):
             sys.stdout = sys.__stdout__
         return res
 
-    def __transform(self, dataset: BinaryLabelDataset, fit=False) -> list[tuple]:
+    def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
         Preprocess data set using each pre-processing function.
 
@@ -92,7 +93,7 @@ class FairBoost(object):
         dist_arr = dist_arr.transpose([1, 0])
         return dist_arr
 
-    def __merge_Xyw(self, datasets: list[tuple]) -> np.array:
+    def __merge_Xyw(self, datasets: List[Tuple]) -> np.array:
         '''
         Returns instances where the last feature is the label. 
                 Parameters:
@@ -109,7 +110,7 @@ class FairBoost(object):
             res.append(m)
         return np.array(res)
 
-    def __unmerge_Xy(self, datasets: list[np.array]) -> list[tuple]:
+    def __unmerge_Xy(self, datasets: List[np.array]) -> List[Tuple]:
         '''
         Return X,y from a dataset where y is the last column 
                 Parameters:
@@ -123,7 +124,7 @@ class FairBoost(object):
             res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
         return res
 
-    def __initialize_bootstrap_datasets(self, datasets: np.array) -> list[np.array]:
+    def __initialize_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
         Assign each instance of a data set to one of the bootstrap data sets. 
                 Parameters:
@@ -141,7 +142,7 @@ class FairBoost(object):
             bootstrap_datasets.append(dataset[indexes == i])
         return bootstrap_datasets
 
-    def __fill_boostrap_datasets(self, bootstrap_datasets: list[np.array], datasets: np.array, p_arrays: list) -> list[np.array]:
+    def __fill_boostrap_datasets(self, bootstrap_datasets: List[np.array], datasets: np.array, p_arrays: List) -> List[np.array]:
         '''
         Fills the bootstrap data set to the desired size. 
                 Parameters:
@@ -166,7 +167,7 @@ class FairBoost(object):
     # Generate the boostrap data sets
     # Returns a list of (X,y)
 
-    def __bootstrap_datasets(self, dataset: BinaryLabelDataset) -> list[tuple]:
+    def __bootstrap_datasets(self, dataset: BinaryLabelDataset) -> List[Tuple]:
         '''
         Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
                 Parameters:

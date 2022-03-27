@@ -10,7 +10,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.distortion_functions 
 from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions import load_preproc_data_german, load_preproc_data_adult
 from copy import deepcopy
 import numpy as np
-from test import test_LFR
+# from test import test_LFR
 
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
