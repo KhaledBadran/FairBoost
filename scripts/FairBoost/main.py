@@ -10,6 +10,7 @@ from enum import Enum
 from aif360.datasets import BinaryLabelDataset
 from scipy.special import softmax
 from typing import List, Tuple
+# import  ipdb
 
 from FairBoost.wrappers import Preprocessing
 
@@ -161,13 +162,10 @@ class FairBoost(object):
             indexes = np.random.choice(
                 indexes, size=(required_size-crnt_size), replace=True, p=p)
             bootstrap_datasets[i] = np.concatenate(
-                (bootstrap_datasets[i], dataset[indexes]))
+                (bootstrap_datasets[i], dataset[indexes])) if len(bootstrap_datasets[i]) > 0 else dataset[indexes]
         return bootstrap_datasets
 
-    # Generate the boostrap data sets
-    # Returns a list of (X,y)
-
-    def __bootstrap_datasets(self, dataset: BinaryLabelDataset) -> List[Tuple]:
+    def __bootstrap_datasets(self, datasets: List[Tuple]) -> List[Tuple]:
         '''
         Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
                 Parameters:
@@ -176,17 +174,17 @@ class FairBoost(object):
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-        datasets = self.__transform(dataset, fit=True)
+    
         datasets = self.__merge_Xyw(datasets)
-
         # If we do the custom bootstrapping, we must define a custom PDF
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
             dist_arrays = self.__get_avg_dist_arr(datasets)
             dist_arrays = softmax(dist_arrays, axis=1).tolist()
+            bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
         else:
             dist_arrays = [None for _ in range(len(datasets))]
+            bootstrap_datasets = [np.array([]) for _ in range(len(datasets))]
 
-        bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
         bootstrap_datasets = self.__fill_boostrap_datasets(
             bootstrap_datasets, datasets, dist_arrays)
 
@@ -202,8 +200,11 @@ class FairBoost(object):
                 Returns:
                         self
         '''
-        datasets = self.__bootstrap_datasets(dataset)
+        datasets = self.__transform(dataset, fit=True)
+        if self.bootstrap_type != Bootstrap_type.NONE:
+            datasets = self.__bootstrap_datasets(datasets)
         for X_bootstrap, y_bootstrap, w in datasets:
+            y_bootstrap = y_bootstrap.ravel()
             model = clone(self.model)
             model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
             self.models.append(model)
