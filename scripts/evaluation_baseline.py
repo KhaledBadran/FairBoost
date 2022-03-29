@@ -166,16 +166,19 @@ def apply_DIR(
     """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
-        repair_level=hyperparameters["repair_level"],
+        repair_level=hyperparameters['init']["repair_level"],
     )
-    index = train_dataset.feature_names.index(dataset_info["sensitive_attribute"])
+    index = train_dataset.feature_names.index(
+        dataset_info["sensitive_attribute"])
 
     train_dataset_DIR = DIR.fit_transform(train_dataset)
     test_dataset_DIR = DIR.fit_transform(test_dataset)
 
     # delete protected columns
-    train_dataset_DIR.features = np.delete(train_dataset_DIR.features, index, axis=1)
-    test_dataset_DIR.features = np.delete(test_dataset_DIR.features, index, axis=1)
+    train_dataset_DIR.features = np.delete(
+        train_dataset_DIR.features, index, axis=1)
+    test_dataset_DIR.features = np.delete(
+        test_dataset_DIR.features, index, axis=1)
 
     return train_dataset_DIR, test_dataset_DIR
 
@@ -224,21 +227,22 @@ def apply_LFR(
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=hyperparameters["k"],
-        Ax=hyperparameters["Ax"],
-        Ay=hyperparameters["Ay"],
-        Az=hyperparameters["Az"],
+        k=hyperparameters['init']["k"],
+        Ax=hyperparameters['init']["Ax"],
+        Ay=hyperparameters['init']["Ay"],
+        Az=hyperparameters['init']["Az"],
         verbose=0,  # Default parameters
     )
 
-    LFR_transformer = LFR_transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
+    LFR_transformer = LFR_transformer.fit(
+        train_dataset, maxiter=5000, maxfun=5000)
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
-        train_dataset, threshold=hyperparameters["threshold"]
+        train_dataset, threshold=hyperparameters['transform']["threshold"]
     )
     test_dataset_LFR = LFR_transformer.transform(
-        test_dataset, threshold=hyperparameters["threshold"]
+        test_dataset, threshold=hyperparameters['transform']["threshold"]
     )
 
     return train_dataset_LFR, test_dataset_LFR
@@ -334,12 +338,14 @@ def main():
 
                 # record the used hyperparameters
                 results[dataset_name][debaiasing_algo_name].append(
-                    {"hyperparameters": hyperparameters, "results": performance_metrics}
+                    {"hyperparameters": hyperparameters,
+                        "results": performance_metrics}
                 )
     # save the results to file
 
     with open("results.json", "w") as fp:
         json.dump(results, fp, indent=4)
+
 
 if __name__ == "__main__":
     main()

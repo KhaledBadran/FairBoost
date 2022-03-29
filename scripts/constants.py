@@ -16,7 +16,8 @@ from sklearn.model_selection import ParameterGrid
 
 DATASETS = {
     "german": {
-        "sensitive_attribute": "sex",  # if changed, apply changes to to the original_dataset attribute
+        # if changed, apply changes to to the original_dataset attribute
+        "sensitive_attribute": "sex",
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_german(["sex"]),
@@ -62,8 +63,11 @@ CLASSIFIERS = {
 }
 
 # Define parameter grid https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.ParameterGrid.html
-DisparateImpactRemover_param_grid = {'repair_level': [0.01, 0.5, 1.0],}
-LFR_param_grid = {"k": [5], "Ax": [0.01], "Ay": [1.0], "Az": [50.0], "threshold": [0.01, 0.5, 0.1]}
+DisparateImpactRemover_param_grid = {'init': list(
+    ParameterGrid({'repair_level': [0.01, 0.5, 1.0]}))}
+
+LFR_param_grid = {'init': list(ParameterGrid({"k": [5], "Ax": [0.01], "Ay": [1.0], "Az": [50.0]})),
+                  'transform': list(ParameterGrid({"threshold": [0.01, 0.5, 0.1]}))}
 
 HYPERPARAMETERS = {
     "Reweighing": [{}],
