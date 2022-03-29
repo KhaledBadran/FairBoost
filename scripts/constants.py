@@ -14,6 +14,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import ParameterGrid
 
+from FairBoost.main import Bootstrap_type
+
 DATASETS = {
     "german": {
         # if changed, apply changes to to the original_dataset attribute
@@ -74,4 +76,13 @@ HYPERPARAMETERS = {
     "DisparateImpactRemover": list(ParameterGrid(DisparateImpactRemover_param_grid)),
     "OptimPreproc": [{}],
     "LFR": list(ParameterGrid(LFR_param_grid)),
+}
+
+FairBoost_param_grid = {
+    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
+}
+
+FAIRBOOST_HYPERPARAMETERS = {
+    'preprocessing': list(ParameterGrid(HYPERPARAMETERS)),
+    'init': list(ParameterGrid(FairBoost_param_grid))
 }
