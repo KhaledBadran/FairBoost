@@ -34,10 +34,22 @@ from FairBoost import wrappers
 np.random.seed(0)
 
 
+@typechecked
 def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
                                 test_dataset: BinaryLabelDataset,
                                 dataset_info: Dict,
-                                hyperparameters: Dict):
+                                hyperparameters: Dict) -> Dict:
+    """
+    Trains Fairboost for the given hyperparameters, with different classifiers, using no preprocessing functions. 
+    Then computes fairness and accuracy metrics.
+
+    :param train_dataset: an AIF360 dataset containing the training examples with their labels
+    :param test_dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize fairboost
+    :return: a dictionary of accuracy and fairness metrics (e.g., disparate_impact) with the values calculated using
+    a trained model
+    """
     results = defaultdict(dict)
     pp = [wrappers.NoPreprocessing() for _ in range(4)]
 
@@ -54,7 +66,15 @@ def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
     return results
 
 
-def init_reweighting(dataset_info, hyperparameters={}):
+@typechecked
+def init_reweighting(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
+    """
+    Initializes the reweighting algorithm so it can be used by Fairboost.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize the reweighing algorithm
+    :return: The reweighing preprocessing function to be used by Fairboost.
+    """
     RW = Reweighing(
         privileged_groups=dataset_info["privileged_groups"],
         unprivileged_groups=dataset_info["unprivileged_groups"],
@@ -62,7 +82,15 @@ def init_reweighting(dataset_info, hyperparameters={}):
     return wrappers.Reweighing(RW)
 
 
-def init_DIR(dataset_info, hyperparameters={}):
+@typechecked
+def init_DIR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
+    """
+    Initializes the DIR algorithm so it can be used by Fairboost.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize the DIR algorithm
+    :return: The DIR preprocessing function to be used by Fairboost.
+    """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
         repair_level=hyperparameters['init']["repair_level"],
@@ -70,12 +98,28 @@ def init_DIR(dataset_info, hyperparameters={}):
     return wrappers.DIR(DIR)
 
 
-def initOptimPreproc(dataset_info, hyperparameters={}):
+@typechecked
+def initOptimPreproc(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
+    """
+    Initializes the OptimPreproc algorithm so it can be used by Fairboost.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize the OptimPreproc algorithm
+    :return: The OptimPreproc preprocessing function to be used by Fairboost.
+    """
     OP = OptimPreproc(OptTools, dataset_info["optim_options"], verbose=False)
     return wrappers.OptimPreproc(OP)
 
 
-def init_LFR(dataset_info, hyperparameters={}):
+@typechecked
+def init_LFR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
+    """
+    Initializes the LFR algorithm so it can be used by Fairboost.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize the LFR algorithm
+    :return: The LFR preprocessing function to be used by Fairboost.
+    """
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
@@ -88,10 +132,21 @@ def init_LFR(dataset_info, hyperparameters={}):
     return wrappers.LFR(LFR_transformer, transform_params=hyperparameters['transform'])
 
 
+@typechecked
 def train_test_fairboost(train_dataset: BinaryLabelDataset,
                          test_dataset: BinaryLabelDataset,
                          dataset_info: Dict,
-                         hyperparameters: Dict):
+                         hyperparameters: Dict) -> Dict:
+    """
+    Trains Fairboost for the given hyperparameters, with different classifiers. 
+    Then computes fairness and accuracy metrics.
+
+    :param train_dataset: an AIF360 dataset containing the training examples with their labels
+    :param test_dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize fairboost
+    :return: a dictionary of accuracy and fairness metrics
+    """
     results = defaultdict(dict)
     RW = init_reweighting(
         dataset_info, hyperparameters['preprocessing']['Reweighing'])
@@ -121,7 +176,16 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     return dict(results)
 
 
-def measure_results(test_dataset, classified_dataset, dataset_info):
+@typechecked
+def measure_results(test_dataset: BinaryLabelDataset, classified_dataset: BinaryLabelDataset, dataset_info: Dict) -> Dict:
+    """
+    Computes fairness and accuracy metrics.
+
+    :param test_dataset: an AIF360 dataset containing the test examples with their labels
+    :param classified_dataset: an AIF360 dataset containing the test examples with the predicted labels
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: a dictionary of accuracy and fairness metrics
+    """
     classification_metric = ClassificationMetric(
         dataset=test_dataset,
         classified_dataset=classified_dataset,
@@ -183,7 +247,14 @@ def main():
     save_results(filename='fairboost', results=results)
 
 
-def save_results(filename, results):
+@typechecked
+def save_results(filename: str, results: Dict):
+    """
+    Saves a given dictionary to a JSON file.
+
+    :param filename: The name of the output file
+    :param results: The results to be saved
+    """
     dir_path = os.path.dirname(os.path.realpath(__file__))
     results_dir = Path(dir_path, "results")
     results_dir.mkdir(parents=True, exist_ok=True)
