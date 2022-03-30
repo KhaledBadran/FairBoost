@@ -22,6 +22,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptT
 from typeguard import typechecked
 from typing import Dict, List, Tuple, Union
 
+import constants
 from constants import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
@@ -30,11 +31,24 @@ from FairBoost import wrappers
 np.random.seed(0)
 
 
-def train_test_bagging_baseline():
-    # pp = [wrappers.NoPreprocessing() for _ in range(4)]
-    # # How to interleave boostrap type
-    # FairBoost()
-    pass
+def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
+                                test_dataset: BinaryLabelDataset,
+                                dataset_info: Dict,
+                                hyperparameters: Dict):
+    results = defaultdict(dict)
+    pp = [wrappers.NoPreprocessing() for _ in range(4)]
+
+    for clf_name, clf in CLASSIFIERS.items():
+        print(f"\nevaluating FairBoost with classifier {clf_name}")
+        ens = FairBoost(clf, pp, **hyperparameters)
+        ens = ens.fit(train_dataset)
+        y_pred = ens.predict(test_dataset)
+
+        classified_dataset = test_dataset.copy()
+        classified_dataset.labels = y_pred
+        results[clf_name] = measure_results(
+            test_dataset, classified_dataset, dataset_info)
+    return results
 
 
 def init_reweighting(dataset_info, hyperparameters={}):
@@ -140,11 +154,17 @@ def main():
         train_split, test_split = dataset.split([0.7], shuffle=True, seed=0)
         # train_split, test_split = initial_preprocessing(train_split, test_split)
 
-        # results[dataset_name]["baseline"] = train_test_bagging_baseline(
-        #     train_split, test_split, dataset_info=dataset_info
-        # )
-        results[dataset_name]["fairboost"] = []
+        results[dataset_name]["baseline"] = []
+        for hyperparameters in ParameterGrid(constants.FairBoost_param_grid):
+            performance_metrics = train_test_bagging_baseline(
+                train_split, test_split, dataset_info, hyperparameters
+            )
+            results[dataset_name]["baseline"].append(
+                {"hyperparameters": hyperparameters,
+                    "results": performance_metrics}
+            )
 
+        results[dataset_name]["fairboost"] = []
         for hyperparameters in ParameterGrid(FAIRBOOST_HYPERPARAMETERS):
 
             performance_metrics = train_test_fairboost(
