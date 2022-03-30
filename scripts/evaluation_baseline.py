@@ -174,11 +174,12 @@ def apply_DIR(
     train_dataset_DIR = DIR.fit_transform(train_dataset)
     test_dataset_DIR = DIR.fit_transform(test_dataset)
 
+    # TODO: what to do with it
     # delete protected columns
-    train_dataset_DIR.features = np.delete(
-        train_dataset_DIR.features, index, axis=1)
-    test_dataset_DIR.features = np.delete(
-        test_dataset_DIR.features, index, axis=1)
+    # train_dataset_DIR.features = np.delete(
+    #     train_dataset_DIR.features, index, axis=1)
+    # test_dataset_DIR.features = np.delete(
+    #     test_dataset_DIR.features, index, axis=1)
 
     return train_dataset_DIR, test_dataset_DIR
 
