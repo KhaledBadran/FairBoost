@@ -5,33 +5,29 @@
 from textwrap import wrap
 import numpy as np
 import pandas as pd
-import json
 from collections import defaultdict
 
-from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import ParameterGrid
 
 from aif360.metrics import BinaryLabelDatasetMetric
-from aif360.metrics import ClassificationMetric
 from aif360.datasets import BinaryLabelDataset
 from aif360.explainers import MetricTextExplainer
 from aif360.algorithms.preprocessing import (
     Reweighing, DisparateImpactRemover, LFR, OptimPreproc,)
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 from typeguard import typechecked
-from typing import Dict, List, Tuple, Union
-from pathlib import Path
-import os
+from typing import Dict
 
 
 import constants
 from constants import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
+from utils import save_results, measure_results
 
 
-np.random.seed(0)
+np.random.seed(42)
 
 
 @typechecked
@@ -161,10 +157,12 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nevaluating FairBoost with classifier {clf_name}")
         try:
+            # Training + prediction
             ens = FairBoost(clf, pp, **hyperparameters['init'])
             ens = ens.fit(train_dataset)
             y_pred = ens.predict(test_dataset)
 
+            # Measuring metrics
             classified_dataset = test_dataset.copy()
             classified_dataset.labels = y_pred
             results[clf_name] = measure_results(
@@ -174,39 +172,6 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
             print(e)
 
     return dict(results)
-
-
-@typechecked
-def measure_results(test_dataset: BinaryLabelDataset, classified_dataset: BinaryLabelDataset, dataset_info: Dict) -> Dict:
-    """
-    Computes fairness and accuracy metrics.
-
-    :param test_dataset: an AIF360 dataset containing the test examples with their labels
-    :param classified_dataset: an AIF360 dataset containing the test examples with the predicted labels
-    :param dataset_info: information about the dataset including privileged and unprivileged groups
-    :return: a dictionary of accuracy and fairness metrics
-    """
-    classification_metric = ClassificationMetric(
-        dataset=test_dataset,
-        classified_dataset=classified_dataset,
-        unprivileged_groups=dataset_info["unprivileged_groups"],
-        privileged_groups=dataset_info["privileged_groups"],
-    )
-
-    # calculate metrics
-    accuracy = accuracy_score(test_dataset.labels, classified_dataset.labels)
-    disparate_impact = classification_metric.disparate_impact()
-    average_odds_difference = classification_metric.average_odds_difference()
-
-    print(f"accuracy {accuracy}")
-    print(f"disparate_impact {disparate_impact}")
-    print(f"average odds difference {average_odds_difference}")
-
-    return {
-        "accuracy": accuracy,
-        "disparate_impact": disparate_impact,
-        "average_odds_difference": average_odds_difference,
-    }
 
 
 def main():
@@ -245,21 +210,6 @@ def main():
 
     # save the results to file
     save_results(filename='fairboost', results=results)
-
-
-@typechecked
-def save_results(filename: str, results: Dict):
-    """
-    Saves a given dictionary to a JSON file.
-
-    :param filename: The name of the output file
-    :param results: The results to be saved
-    """
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    results_dir = Path(dir_path, "results")
-    results_dir.mkdir(parents=True, exist_ok=True)
-    with open(f"{results_dir}/{filename}.json", "w") as fp:
-        json.dump(results, fp, indent=4)
 
 
 if __name__ == "__main__":

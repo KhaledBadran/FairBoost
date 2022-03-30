@@ -32,6 +32,9 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptT
 # Experiment constants
 from constants import DATASETS, CLASSIFIERS, HYPERPARAMETERS
 
+from utils import save_results, measure_results
+
+
 # typechecking
 from typeguard import typechecked
 from typing import Dict, List, Tuple, Union
@@ -65,33 +68,15 @@ def train_test_models(
 
         # Check if the training labels are not all the same
         if len(set(y_train)) != 1:
+            # Training + prediction
             clf.fit(X_train, y_train, sample_weight=train_dataset.instance_weights)
-
             y_pred = clf.predict(X_test)
 
+            # Measuring metrics
             classified_dataset = test_dataset.copy()
             classified_dataset.labels = y_pred
-            classification_metric = ClassificationMetric(
-                dataset=test_dataset,
-                classified_dataset=classified_dataset,
-                unprivileged_groups=dataset_info["unprivileged_groups"],
-                privileged_groups=dataset_info["privileged_groups"],
-            )
-
-            # calculate metrics
-            accuracy = accuracy_score(y_test, y_pred)
-            disparate_impact = classification_metric.disparate_impact()
-            average_odds_difference = classification_metric.average_odds_difference()
-
-            print(f"accuracy {accuracy}")
-            print(f"disparate_impact {disparate_impact}")
-            print(f"average odds difference {average_odds_difference}")
-
-            results[clf_name] = {
-                "accuracy": accuracy,
-                "disparate_impact": disparate_impact,
-                "average_odds_difference": average_odds_difference,
-            }
+            results[clf_name] = measure_results(
+                test_dataset, classified_dataset, dataset_info)
 
         else:
             print(f"all training labels are same, classifier will not be trained")
@@ -343,9 +328,7 @@ def main():
                         "results": performance_metrics}
                 )
     # save the results to file
-
-    with open("results.json", "w") as fp:
-        json.dump(results, fp, indent=4)
+    save_results(filename='baseline', results=results)
 
 
 if __name__ == "__main__":
