@@ -2,9 +2,6 @@
 import numpy as np
 from sklearn.base import clone
 import scipy.spatial.distance as dist
-import warnings
-import os
-import sys
 from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
@@ -13,6 +10,7 @@ from typing import List, Tuple
 # import  ipdb
 
 from FairBoost.wrappers import Preprocessing
+from .utils import quiet
 
 
 class Bootstrap_type(str, Enum):
@@ -36,14 +34,6 @@ class FairBoost(object):
         self.dist_func = dist.cosine
         # ipdb.set_trace(context=6)
 
-    def __quiet(self, func, args):
-        with warnings.catch_warnings():
-            sys.stdout = open(os.devnull, 'w')
-            warnings.simplefilter("ignore")
-            res = func(*args)
-            sys.stdout = sys.__stdout__
-        return res
-
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
         Preprocess data set using each pre-processing function.
@@ -60,7 +50,7 @@ class FairBoost(object):
             print(f'\t-{ppf}')
             # Call fit_transform or transform depending on Fairboost stage
             func = ppf.fit_transform if fit else ppf.transform
-            d = self.__quiet(func, [dataset])
+            d = quiet(func, [dataset.copy(deepcopy=True)])
             pp_data.append(d)
         return pp_data
 
