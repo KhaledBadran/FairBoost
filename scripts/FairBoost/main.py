@@ -15,10 +15,10 @@ from typing import List, Tuple
 from FairBoost.wrappers import Preprocessing
 
 
-class Bootstrap_type(Enum):
-    NONE = 1
-    DEFAULT = 2
-    CUSTOM = 3
+class Bootstrap_type(str, Enum):
+    NONE = "NONE"
+    DEFAULT = 'DEFAULT'
+    CUSTOM = 'CUSTOM'
 
 
 @typechecked
@@ -174,7 +174,7 @@ class FairBoost(object):
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-    
+
         datasets = self.__merge_Xyw(datasets)
         # If we do the custom bootstrapping, we must define a custom PDF
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
