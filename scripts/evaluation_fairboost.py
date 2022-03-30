@@ -21,6 +21,9 @@ from aif360.algorithms.preprocessing import (
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 from typeguard import typechecked
 from typing import Dict, List, Tuple, Union
+from pathlib import Path
+import os
+
 
 import constants
 from constants import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS
@@ -177,7 +180,14 @@ def main():
             )
 
     # save the results to file
-    with open("fairboost_results.json", "w") as fp:
+    save_results(filename='fairboost', results=results)
+
+
+def save_results(filename, results):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    results_dir = Path(dir_path, "results")
+    results_dir.mkdir(parents=True, exist_ok=True)
+    with open(f"{results_dir}/{filename}.json", "w") as fp:
         json.dump(results, fp, indent=4)
 
 
