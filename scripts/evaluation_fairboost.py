@@ -95,7 +95,7 @@ def init_DIR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
 
 
 @typechecked
-def initOptimPreproc(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
+def init_OptimPreproc(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
     """
     Initializes the OptimPreproc algorithm so it can be used by Fairboost.
 
@@ -148,7 +148,7 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
         dataset_info, hyperparameters['preprocessing']['Reweighing'])
     DIR = init_DIR(
         dataset_info, hyperparameters['preprocessing']['DisparateImpactRemover'])
-    OP = initOptimPreproc(
+    OP = init_OptimPreproc(
         dataset_info, hyperparameters['preprocessing']['OptimPreproc'])
     LFR_transformer = init_LFR(
         dataset_info, hyperparameters['preprocessing']['LFR'])
