@@ -20,6 +20,20 @@ class Preprocessing:
         return d.features, d.labels, d.instance_weights
 
 
+class NoPreprocessing(Preprocessing):
+    def __init__(self):
+        super().__init__(preprocessing=None)
+
+    def __str__(self) -> str:
+        return f'NoPreprocessing'
+
+    def fit_transform(self, dataset):
+        return dataset.features, dataset.labels, dataset.instance_weights
+
+    def transform(self, dataset):
+        return dataset.features, dataset.labels, dataset.instance_weights
+
+
 class DIR(Preprocessing):
     # TODO: what do we do with deletion of private attribs
     # def __delete_protected(self, dataset):
@@ -34,11 +48,23 @@ class DIR(Preprocessing):
 
 
 class OptimPreproc(Preprocessing):
-    pass
+    def fit_transform(self, dataset):
+        d = self.preprocessing.fit_transform(dataset, **self.transform_params)
+        # OptimPreproc needs to align data sets after transform
+        d = dataset.align_datasets(d)
+        return d.features, d.labels, d.instance_weights
+
+    def transform(self, dataset):
+        d = self.preprocessing.transform(dataset, **self.transform_params)
+        # OptimPreproc needs to align data sets after transform
+        d = dataset.align_datasets(d)
+        return d.features, d.labels, d.instance_weights
 
 
 class Reweighing(Preprocessing):
-    pass
+    def transform(self, dataset):
+        # Reweight should not reweight test data set.
+        return dataset.features, dataset.labels, dataset.instance_weights
 
 
 class LFR(Preprocessing):
