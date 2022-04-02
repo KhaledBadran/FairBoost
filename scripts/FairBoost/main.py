@@ -21,12 +21,13 @@ class Bootstrap_type(str, Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63, verbose=False):
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
         self.bootstrap_size = bootstrap_size
         self.bootstrap_type = bootstrap_type
+        self.verbose = verbose
 
         # The trained models
         self.models = []
@@ -45,9 +46,11 @@ class FairBoost(object):
                         pp_data (list): List with the different preprocessed data sets
         '''
         pp_data = []
-        print(f'Transforming data set with:')
+        if self.verbose:
+            print(f'Transforming data set with:')
         for ppf in self.preprocessing_functions:
-            print(f'\t-{ppf}')
+            if self.verbose:
+                print(f'\t-{ppf}')
             # Call fit_transform or transform depending on Fairboost stage
             func = ppf.fit_transform if fit else ppf.transform
             d = quiet(func, [dataset.copy(deepcopy=True)])

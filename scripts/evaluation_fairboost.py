@@ -26,7 +26,6 @@ from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
 from utils import save_results, measure_results
 
-
 np.random.seed(42)
 
 
@@ -48,9 +47,8 @@ def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
     """
     results = defaultdict(dict)
     pp = [wrappers.NoPreprocessing() for _ in range(4)]
-
     for clf_name, clf in CLASSIFIERS.items():
-        print(f"\nevaluating FairBoost with classifier {clf_name}")
+        print(f"\nFairboost classifier name: {clf_name}")
         ens = FairBoost(clf, pp, **hyperparameters)
         ens = ens.fit(train_dataset)
         y_pred = ens.predict(test_dataset)
@@ -155,7 +153,7 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     pp = [RW, DIR, OP, LFR_transformer]
 
     for clf_name, clf in CLASSIFIERS.items():
-        print(f"\nevaluating FairBoost with classifier {clf_name}")
+        print(f"\nFairboost classifier name: {clf_name}")
         try:
             # Training + prediction
             ens = FairBoost(clf, pp, **hyperparameters['init'])
@@ -187,6 +185,7 @@ def main():
         # train_split, test_split = initial_preprocessing(train_split, test_split)
 
         results[dataset_name]["baseline"] = []
+        print(f"\n\n---------- Baselines ----------")
         for hyperparameters in ParameterGrid(constants.FairBoost_param_grid):
             performance_metrics = train_test_bagging_baseline(
                 train_split, test_split, dataset_info, hyperparameters
@@ -197,8 +196,9 @@ def main():
             )
 
         results[dataset_name]["fairboost"] = []
-        for hyperparameters in ParameterGrid(FAIRBOOST_HYPERPARAMETERS):
-
+        n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
+        for i, hyperparameters in enumerate(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)):
+            print(f"\n\n---------- Progress: {i}/{n_combinations} ----------")
             performance_metrics = train_test_fairboost(
                 train_split, test_split, dataset_info, hyperparameters)
 
