@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typeguard import typechecked
 from pathlib import Path
 import os
@@ -54,3 +55,13 @@ def measure_results(test_dataset: BinaryLabelDataset, classified_dataset: Binary
         "disparate_impact": disparate_impact,
         "average_odds_difference": average_odds_difference,
     }
+
+
+def merge_results_array(results):
+    metrics_agg = defaultdict(lambda: defaultdict(list))
+    for result in results:
+        for algo_type in result:
+            for metric_name in result[algo_type]:
+                metrics_agg[algo_type][metric_name].append(
+                    result[algo_type][metric_name])
+    return metrics_agg

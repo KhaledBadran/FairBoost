@@ -23,7 +23,7 @@ from typing import Dict
 from constants.splits import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS, FairBoost_param_grid, SEEDS
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
-from utils import save_results, measure_results
+from utils import save_results, measure_results, merge_results_array
 
 np.random.seed(42)
 
@@ -195,6 +195,8 @@ def main():
                 )
                 results[dataset_name]["baseline"][-1]['results'].append(
                     performance_metrics)
+            results[dataset_name]["baseline"][-1]['results'] = merge_results_array(
+                results[dataset_name]["baseline"][-1]['results'])
 
         results[dataset_name]["fairboost"] = []
         n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
@@ -213,6 +215,8 @@ def main():
                 # Save the results
                 results[dataset_name]["fairboost"][-1]['results'].append(
                     performance_metrics)
+            results[dataset_name]["fairboost"][-1]['results'] = merge_results_array(
+                results[dataset_name]["fairboost"][-1]['results'])
 
     # save the results to file
     save_results(filename='fairboost_splits', results=results)
