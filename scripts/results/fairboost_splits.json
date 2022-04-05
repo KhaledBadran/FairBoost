@@ -1,0 +1,63 @@
+{
+    "german": {
+        "baseline": [
+            {
+                "hyperparameters": {
+                    "bootstrap_type": "NONE"
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": [
+                            0.7333333333333333,
+                            0.68,
+                            0.67,
+                            0.67
+                        ],
+                        "disparate_impact": [
+                            0.8594075928243637,
+                            0.8480769230769231,
+                            0.9880952380952381,
+                            0.8730964467005077
+                        ],
+                        "average_odds_difference": [
+                            -0.18472088288867466,
+                            -0.16683388676313204,
+                            -0.01315789473684209,
+                            -0.13104487077850008
+                        ]
+                    }
+                }
+            }
+        ],
+        "fairboost": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "bootstrap_type": "NONE"
+                    },
+                    "preprocessing": {
+                        "DisparateImpactRemover": {
+                            "init": {
+                                "repair_level": 0.5
+                            }
+                        },
+                        "LFR": {
+                            "init": {
+                                "k": 5,
+                                "Ax": 0.01,
+                                "Ay": 1.0,
+                                "Az": 50.0
+                            },
+                            "transform": {
+                                "threshold": 0.5
+                            }
+                        },
+                        "OptimPreproc": {},
+                        "Reweighing": {}
+                    }
+                },
+                "results": {}
+            }
+        ]
+    }
+}
