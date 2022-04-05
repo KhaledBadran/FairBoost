@@ -20,8 +20,7 @@ from typeguard import typechecked
 from typing import Dict
 
 
-import constants
-from constants import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS
+from constants.hyp_tuning import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS, FairBoost_param_grid
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
 from utils import save_results, measure_results
@@ -186,7 +185,7 @@ def main():
 
         results[dataset_name]["baseline"] = []
         print(f"\n\n---------- Baselines ----------")
-        for hyperparameters in ParameterGrid(constants.FairBoost_param_grid):
+        for hyperparameters in ParameterGrid(FairBoost_param_grid):
             performance_metrics = train_test_bagging_baseline(
                 train_split, test_split, dataset_info, hyperparameters
             )
