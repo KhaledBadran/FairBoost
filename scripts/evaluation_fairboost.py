@@ -172,7 +172,18 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     return dict(results)
 
 
-def evaluate_baseline(results, dataset, dataset_name, dataset_info):
+@typechecked
+def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict) -> defaultdict:
+    """
+    Run Fairboost with no preprocessing using different hyperparameter configurations.
+    Measure and save the performances.
+
+    :param results: The dictionnary storing results for the run
+    :param dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_name: The name of the dataset
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: The updated results dictionnary
+    """
     results[dataset_name]["baseline"] = []
 
     # Measuring Fairboost performances for different hyperparameter configurations (without unfairness mitigation techniques)
@@ -198,7 +209,18 @@ def evaluate_baseline(results, dataset, dataset_name, dataset_info):
     return results
 
 
-def evaluate_fairboost(results, dataset, dataset_name, dataset_info):
+@typechecked
+def evaluate_fairboost(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+    """
+    Run Fairboost using different hyperparameter configurations.
+    Measure and save the performances.
+
+    :param results: The dictionnary storing results for the run
+    :param dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_name: The name of the dataset
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: The updated results dictionnary
+    """
     results[dataset_name]["fairboost"] = []
     n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
 
