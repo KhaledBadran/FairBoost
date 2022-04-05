@@ -32,7 +32,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptT
 # Experiment constants
 from constants.splits import DATASETS, CLASSIFIERS, HYPERPARAMETERS, SEEDS
 
-from utils import save_results, measure_results
+from utils import save_results, measure_results, merge_results_array
 
 
 # typechecking
@@ -295,6 +295,8 @@ def main():
                 [0.7], shuffle=True, seed=seed)
             results[dataset_name]["baseline"].append(train_test_models(
                 train_split, test_split, dataset_info=dataset_info))
+        results[dataset_name]["baseline"] = merge_results_array(
+            results[dataset_name]["baseline"])
 
         for (
             debaiasing_algo_name,
@@ -333,6 +335,8 @@ def main():
                     )
                     results[dataset_name][debaiasing_algo_name][-1]['results'].append(
                         performance_metrics)
+                results[dataset_name][debaiasing_algo_name][-1]['results'] = merge_results_array(
+                    results[dataset_name][debaiasing_algo_name][-1]['results'])
 
     # save the results to file
     save_results(filename='baseline_splits', results=results)
