@@ -30,7 +30,7 @@ from aif360.algorithms.preprocessing import (
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 
 # Experiment constants
-from constants import DATASETS, CLASSIFIERS, HYPERPARAMETERS
+from constants.hyp_tuning import DATASETS, CLASSIFIERS, HYPERPARAMETERS
 
 from utils import save_results, measure_results
 
