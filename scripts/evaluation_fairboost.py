@@ -3,6 +3,7 @@
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_meta_classifier.ipynb
 # https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
 from textwrap import wrap
+from unittest import result
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -171,6 +172,60 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     return dict(results)
 
 
+def evaluate_baseline(results, dataset, dataset_name, dataset_info):
+    results[dataset_name]["baseline"] = []
+
+    # Measuring Fairboost performances for different hyperparameter configurations (without unfairness mitigation techniques)
+    for hyperparameters in ParameterGrid(FairBoost_param_grid):
+        results[dataset_name]["baseline"].append(
+            {"hyperparameters": hyperparameters,
+                "results": []}
+        )
+        # Splitting dataset over different seeds
+        for seed in SEEDS:
+            train_split, test_split = dataset.split(
+                [0.7], shuffle=True, seed=seed)
+            # Measuring model performance
+            performance_metrics = train_test_bagging_baseline(
+                train_split, test_split, dataset_info, hyperparameters
+            )
+            results[dataset_name]["baseline"][-1]['results'].append(
+                performance_metrics)
+
+        # Merging results for clarity
+        results[dataset_name]["baseline"][-1]['results'] = merge_results_array(
+            results[dataset_name]["baseline"][-1]['results'])
+    return results
+
+
+def evaluate_fairboost(results, dataset, dataset_name, dataset_info):
+    results[dataset_name]["fairboost"] = []
+    n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
+
+    # Measuring Fairboost performances for different hyperparameter configurations
+    for i, hyperparameters in enumerate(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)):
+        print(f"\n---------- Progress: {i}/{n_combinations} ----------")
+        results[dataset_name]["fairboost"].append(
+            {"hyperparameters": hyperparameters,
+                "results": []}
+        )
+
+        # Splitting dataset over different seeds
+        for seed in SEEDS:
+            train_split, test_split = dataset.split(
+                [0.7], shuffle=True, seed=seed)
+            # Measuring model performance
+            performance_metrics = train_test_fairboost(
+                train_split, test_split, dataset_info, hyperparameters)
+            results[dataset_name]["fairboost"][-1]['results'].append(
+                performance_metrics)
+
+        # Merging results for clarity
+        results[dataset_name]["fairboost"][-1]['results'] = merge_results_array(
+            results[dataset_name]["fairboost"][-1]['results'])
+    return results
+
+
 def main():
     results = defaultdict(dict)
 
@@ -180,43 +235,13 @@ def main():
 
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
-        results[dataset_name]["baseline"] = []
         print(f"\n\n---------- Baselines ----------")
-        for hyperparameters in ParameterGrid(FairBoost_param_grid):
-            results[dataset_name]["baseline"].append(
-                {"hyperparameters": hyperparameters,
-                 "results": []}
-            )
-            for seed in SEEDS:
-                train_split, test_split = dataset.split(
-                    [0.7], shuffle=True, seed=seed)
-                performance_metrics = train_test_bagging_baseline(
-                    train_split, test_split, dataset_info, hyperparameters
-                )
-                results[dataset_name]["baseline"][-1]['results'].append(
-                    performance_metrics)
-            results[dataset_name]["baseline"][-1]['results'] = merge_results_array(
-                results[dataset_name]["baseline"][-1]['results'])
+        results = evaluate_baseline(
+            results, dataset, dataset_name, dataset_info)
 
-        results[dataset_name]["fairboost"] = []
-        n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
-        for i, hyperparameters in enumerate(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)):
-            print(f"\n\n---------- Progress: {i}/{n_combinations} ----------")
-            results[dataset_name]["fairboost"].append(
-                {"hyperparameters": hyperparameters,
-                 "results": []}
-            )
-            for seed in SEEDS:
-                train_split, test_split = dataset.split(
-                    [0.7], shuffle=True, seed=seed)
-                performance_metrics = train_test_fairboost(
-                    train_split, test_split, dataset_info, hyperparameters)
-
-                # Save the results
-                results[dataset_name]["fairboost"][-1]['results'].append(
-                    performance_metrics)
-            results[dataset_name]["fairboost"][-1]['results'] = merge_results_array(
-                results[dataset_name]["fairboost"][-1]['results'])
+        print(f"\n\n---------- Fairboost ----------")
+        results = evaluate_fairboost(
+            results, dataset, dataset_name, dataset_info)
 
     # save the results to file
     save_results(filename='fairboost_splits', results=results)
