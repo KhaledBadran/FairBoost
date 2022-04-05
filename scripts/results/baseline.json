@@ -1,0 +1,266 @@
+{
+    "german": {
+        "baseline": {
+            "Logistic Regression": {
+                "accuracy": 0.6966666666666667,
+                "disparate_impact": 0.7661199095022625,
+                "average_odds_difference": -0.2752564102564103
+            },
+            "Random Forest": {
+                "accuracy": 0.6666666666666666,
+                "disparate_impact": 0.6566742081447964,
+                "average_odds_difference": -0.36628205128205127
+            }
+        },
+        "Reweighing": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.7,
+                        "disparate_impact": 1.0214932126696834,
+                        "average_odds_difference": 0.01641025641025634
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.67,
+                        "disparate_impact": 0.9325609031491384,
+                        "average_odds_difference": -0.07987179487179491
+                    }
+                }
+            }
+        ],
+        "DisparateImpactRemover": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "repair_level": 1.0
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6966666666666667,
+                        "disparate_impact": 0.7661199095022625,
+                        "average_odds_difference": -0.2752564102564103
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.69,
+                        "disparate_impact": 0.9286729184427395,
+                        "average_odds_difference": -0.0979487179487179
+                    }
+                }
+            }
+        ],
+        "OptimPreproc": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.7,
+                        "disparate_impact": 0.9209023415191319,
+                        "average_odds_difference": -0.1019366790261112
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.67,
+                        "disparate_impact": 0.8431372549019608,
+                        "average_odds_difference": -0.17702351317993703
+                    }
+                }
+            }
+        ],
+        "LFR": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "Ax": 0.01,
+                        "Ay": 1.0,
+                        "Az": 50.0,
+                        "k": 5
+                    },
+                    "transform": {
+                        "threshold": 0.1
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {},
+                    "Random Forest": {}
+                }
+            }
+        ]
+    },
+    "adult": {
+        "baseline": {
+            "Logistic Regression": {
+                "accuracy": 0.8042039172865625,
+                "disparate_impact": 0.0,
+                "average_odds_difference": -0.27273605621431707
+            },
+            "Random Forest": {
+                "accuracy": 0.8037944448235856,
+                "disparate_impact": 0.0,
+                "average_odds_difference": -0.27004025764895334
+            }
+        },
+        "Reweighing": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.7905548351873336,
+                        "disparate_impact": 0.706625314122085,
+                        "average_odds_difference": 0.019935709638750347
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.7833890670852385,
+                        "disparate_impact": 0.9969272884671573,
+                        "average_odds_difference": 0.08616304192869043
+                    }
+                }
+            }
+        ],
+        "DisparateImpactRemover": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "repair_level": 1.0
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.8042039172865625,
+                        "disparate_impact": 0.0,
+                        "average_odds_difference": -0.27273605621431707
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.8035897085920972,
+                        "disparate_impact": 0.0,
+                        "average_odds_difference": -0.27073927682623333
+                    }
+                }
+            }
+        ],
+        "OptimPreproc": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.7811369685388657,
+                        "disparate_impact": 0.4112934340048841,
+                        "average_odds_difference": -0.13637051882685308
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.7792943424554699,
+                        "disparate_impact": 0.6857116359740357,
+                        "average_odds_difference": -0.026404252338629846
+                    }
+                }
+            }
+        ],
+        "LFR": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "Ax": 0.01,
+                        "Ay": 1.0,
+                        "Az": 50.0,
+                        "k": 5
+                    },
+                    "transform": {
+                        "threshold": 0.1
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {},
+                    "Random Forest": {}
+                }
+            }
+        ]
+    },
+    "compas": {
+        "baseline": {
+            "Logistic Regression": {
+                "accuracy": 0.6805555555555556,
+                "disparate_impact": 0.6961862705740667,
+                "average_odds_difference": -0.18201564039724483
+            },
+            "Random Forest": {
+                "accuracy": 0.6691919191919192,
+                "disparate_impact": 0.788328214129004,
+                "average_odds_difference": -0.0831890073871365
+            }
+        },
+        "Reweighing": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6672979797979798,
+                        "disparate_impact": 0.8480776076895692,
+                        "average_odds_difference": -0.060663979640613014
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.6483585858585859,
+                        "disparate_impact": 1.1376613704071499,
+                        "average_odds_difference": 0.11275769948708411
+                    }
+                }
+            }
+        ],
+        "DisparateImpactRemover": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "repair_level": 1.0
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6805555555555556,
+                        "disparate_impact": 0.6961862705740667,
+                        "average_odds_difference": -0.18201564039724483
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.6679292929292929,
+                        "disparate_impact": 0.8017120894479386,
+                        "average_odds_difference": -0.08052580977534604
+                    }
+                }
+            }
+        ],
+        "OptimPreproc": [
+            {
+                "hyperparameters": {},
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6742424242424242,
+                        "disparate_impact": 0.8048349056603774,
+                        "average_odds_difference": -0.11681850809635991
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.6628787878787878,
+                        "disparate_impact": 1.1051996489688458,
+                        "average_odds_difference": 0.08635911793405604
+                    }
+                }
+            }
+        ],
+        "LFR": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "Ax": 0.01,
+                        "Ay": 1.0,
+                        "Az": 50.0,
+                        "k": 5
+                    },
+                    "transform": {
+                        "threshold": 0.1
+                    }
+                },
+                "results": {
+                    "Logistic Regression": {},
+                    "Random Forest": {}
+                }
+            }
+        ]
+    }
+}

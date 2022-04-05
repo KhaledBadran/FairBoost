@@ -1,0 +1,173 @@
+{
+    "german": {
+        "baseline": [
+            {
+                "hyperparameters": {
+                    "bootstrap_type": "NONE"
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6966666666666667,
+                        "disparate_impact": 0.7661199095022625,
+                        "average_odds_difference": -0.2752564102564103
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.6933333333333334,
+                        "disparate_impact": 0.9242081447963801,
+                        "average_odds_difference": -0.10128205128205126
+                    }
+                }
+            }
+        ],
+        "fairboost": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "bootstrap_type": "NONE"
+                    },
+                    "preprocessing": {
+                        "DisparateImpactRemover": {
+                            "init": {
+                                "repair_level": 1.0
+                            }
+                        },
+                        "LFR": {
+                            "init": {
+                                "Ax": 0.01,
+                                "Ay": 1.0,
+                                "Az": 50.0,
+                                "k": 5
+                            },
+                            "transform": {
+                                "threshold": 0.1
+                            }
+                        },
+                        "OptimPreproc": {},
+                        "Reweighing": {}
+                    }
+                },
+                "results": {
+                    "Random Forest": {
+                        "accuracy": 0.7,
+                        "disparate_impact": 1.0,
+                        "average_odds_difference": 0.0
+                    }
+                }
+            }
+        ]
+    },
+    "adult": {
+        "baseline": [
+            {
+                "hyperparameters": {
+                    "bootstrap_type": "NONE"
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.8042039172865625,
+                        "disparate_impact": 0.0,
+                        "average_odds_difference": -0.27273605621431707
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.8037261994130894,
+                        "disparate_impact": 0.0,
+                        "average_odds_difference": -0.25325574586444155
+                    }
+                }
+            }
+        ],
+        "fairboost": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "bootstrap_type": "NONE"
+                    },
+                    "preprocessing": {
+                        "DisparateImpactRemover": {
+                            "init": {
+                                "repair_level": 1.0
+                            }
+                        },
+                        "LFR": {
+                            "init": {
+                                "Ax": 0.01,
+                                "Ay": 1.0,
+                                "Az": 50.0,
+                                "k": 5
+                            },
+                            "transform": {
+                                "threshold": 0.1
+                            }
+                        },
+                        "OptimPreproc": {},
+                        "Reweighing": {}
+                    }
+                },
+                "results": {
+                    "Random Forest": {
+                        "accuracy": 0.7920562342182488,
+                        "disparate_impact": 0.0,
+                        "average_odds_difference": -0.14331357048748353
+                    }
+                }
+            }
+        ]
+    },
+    "compas": {
+        "baseline": [
+            {
+                "hyperparameters": {
+                    "bootstrap_type": "NONE"
+                },
+                "results": {
+                    "Logistic Regression": {
+                        "accuracy": 0.6805555555555556,
+                        "disparate_impact": 0.6961862705740667,
+                        "average_odds_difference": -0.18201564039724483
+                    },
+                    "Random Forest": {
+                        "accuracy": 0.6647727272727273,
+                        "disparate_impact": 0.7409168875721192,
+                        "average_odds_difference": -0.15779771905121134
+                    }
+                }
+            }
+        ],
+        "fairboost": [
+            {
+                "hyperparameters": {
+                    "init": {
+                        "bootstrap_type": "NONE"
+                    },
+                    "preprocessing": {
+                        "DisparateImpactRemover": {
+                            "init": {
+                                "repair_level": 1.0
+                            }
+                        },
+                        "LFR": {
+                            "init": {
+                                "Ax": 0.01,
+                                "Ay": 1.0,
+                                "Az": 50.0,
+                                "k": 5
+                            },
+                            "transform": {
+                                "threshold": 0.1
+                            }
+                        },
+                        "OptimPreproc": {},
+                        "Reweighing": {}
+                    }
+                },
+                "results": {
+                    "Random Forest": {
+                        "accuracy": 0.6672979797979798,
+                        "disparate_impact": 0.7291157972623012,
+                        "average_odds_difference": -0.18167026036675893
+                    }
+                }
+            }
+        ]
+    }
+}
