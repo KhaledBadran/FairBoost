@@ -280,6 +280,69 @@ def apply_preprocessing_algo(
     )
 
 
+def evaluate_baseline(results, dataset, dataset_name, dataset_info):
+    results[dataset_name]["baseline"] = []
+
+    # Splitting dataset over different seeds
+    for seed in SEEDS:
+        train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
+        # Measuring model performance
+        metrics = train_test_models(
+            train_split, test_split, dataset_info=dataset_info)
+        results[dataset_name]["baseline"].append(metrics)
+
+    # Merging results for clarity
+    results[dataset_name]["baseline"] = merge_results_array(
+        results[dataset_name]["baseline"])
+    return results
+
+
+def evaluate_mitigation_techniques(results, dataset, dataset_name, dataset_info):
+
+    for (
+        debaiasing_algo_name,
+        hyperparameters_space,
+    ) in HYPERPARAMETERS.items():
+        print(f"\n\n####After applying {debaiasing_algo_name}######\n")
+
+        results[dataset_name][debaiasing_algo_name] = []
+
+        for hyperparameters in hyperparameters_space:
+            results[dataset_name][debaiasing_algo_name].append(
+                {"hyperparameters": hyperparameters,
+                    "results": []}
+            )
+
+            # Splitting dataset over different seeds
+            for seed in SEEDS:
+                train_split, test_split = dataset.split(
+                    [0.7], shuffle=True, seed=seed)
+                # Transforming datasets with unfairness mitigation technique
+                (
+                    train_split_transformed,
+                    test_split_transformed,
+                ) = apply_preprocessing_algo(
+                    debaiasing_algo_name,
+                    hyperparameters,
+                    train_split.copy(deepcopy=True),
+                    test_split.copy(deepcopy=True),
+                    dataset_info,
+                )
+                # Measuring model performance
+                performance_metrics = train_test_models(
+                    train_split_transformed,
+                    test_split_transformed,
+                    dataset_info=dataset_info,
+                )
+                results[dataset_name][debaiasing_algo_name][-1]['results'].append(
+                    performance_metrics)
+
+            # Merging results for clarity
+            results[dataset_name][debaiasing_algo_name][-1]['results'] = merge_results_array(
+                results[dataset_name][debaiasing_algo_name][-1]['results'])
+    return results
+
+
 def main():
     results = defaultdict(dict)
 
@@ -289,54 +352,13 @@ def main():
 
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
-        results[dataset_name]["baseline"] = []
-        for seed in SEEDS:
-            train_split, test_split = dataset.split(
-                [0.7], shuffle=True, seed=seed)
-            results[dataset_name]["baseline"].append(train_test_models(
-                train_split, test_split, dataset_info=dataset_info))
-        results[dataset_name]["baseline"] = merge_results_array(
-            results[dataset_name]["baseline"])
+        print(f"\n\n---------- Baselines ----------")
+        results = evaluate_baseline(
+            results, dataset, dataset_name, dataset_info)
 
-        for (
-            debaiasing_algo_name,
-            hyperparameters_space,
-        ) in HYPERPARAMETERS.items():
-            print(f"\n\n####After applying {debaiasing_algo_name}######\n")
-
-            results[dataset_name][debaiasing_algo_name] = []
-
-            for hyperparameters in hyperparameters_space:
-                # record the used hyperparameters
-                results[dataset_name][debaiasing_algo_name].append(
-                    {"hyperparameters": hyperparameters,
-                        "results": []}
-                )
-
-                for seed in SEEDS:
-                    train_split, test_split = dataset.split(
-                        [0.7], shuffle=True, seed=seed)
-                    # train_split, test_split = initial_preprocessing(train_split, test_split)
-                    (
-                        train_split_transformed,
-                        test_split_transformed,
-                    ) = apply_preprocessing_algo(
-                        debaiasing_algo_name,
-                        hyperparameters,
-                        train_split.copy(deepcopy=True),
-                        test_split.copy(deepcopy=True),
-                        dataset_info,
-                    )
-
-                    performance_metrics = train_test_models(
-                        train_split_transformed,
-                        test_split_transformed,
-                        dataset_info=dataset_info,
-                    )
-                    results[dataset_name][debaiasing_algo_name][-1]['results'].append(
-                        performance_metrics)
-                results[dataset_name][debaiasing_algo_name][-1]['results'] = merge_results_array(
-                    results[dataset_name][debaiasing_algo_name][-1]['results'])
+        print(f"\n\n---------- Unfairness Mitigation techniques ----------")
+        results = evaluate_mitigation_techniques(
+            results, dataset, dataset_name, dataset_info)
 
     # save the results to file
     save_results(filename='baseline_splits', results=results)
