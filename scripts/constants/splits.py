@@ -16,6 +16,8 @@ from sklearn.model_selection import ParameterGrid
 
 from FairBoost.main import Bootstrap_type
 
+SEEDS = [1, 2, 3, 4]
+# ------------------------------- DATASET HYPERPARAMETERS ------------------------------- #
 DATASETS = {
     "german": {
         # if changed, apply changes to to the original_dataset attribute
@@ -56,7 +58,7 @@ DATASETS = {
     },
 }
 
-
+# ------------------------------- CLASSIFIERS GRID ------------------------------- #
 CLASSIFIERS = {
     "Logistic Regression": LogisticRegression(),
     "Random Forest": RandomForestClassifier(
@@ -64,12 +66,18 @@ CLASSIFIERS = {
     ),
 }
 
-# Define parameter grid https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.ParameterGrid.html
+# ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
 DisparateImpactRemover_param_grid = [{'init': {'repair_level': 0.5}}]
 
 LFR_param_grid = [{'init': {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
                   'transform': {"threshold": 0.5}}]
 
+FairBoost_param_grid = {
+    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
+}
+
+
+# ------------------------------- TOP-LEVEL HYPERPARAMETER GRIDS ------------------------------- #
 HYPERPARAMETERS = {
     "Reweighing": [{}],
     "DisparateImpactRemover": DisparateImpactRemover_param_grid,
@@ -77,14 +85,7 @@ HYPERPARAMETERS = {
     "LFR": LFR_param_grid,
 }
 
-FairBoost_param_grid = {
-    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
-}
-
 FAIRBOOST_HYPERPARAMETERS = {
     'preprocessing': list(ParameterGrid(HYPERPARAMETERS)),
     'init': list(ParameterGrid(FairBoost_param_grid))
 }
-
-
-SEEDS = [1, 2, 3, 4]
