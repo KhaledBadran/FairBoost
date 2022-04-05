@@ -280,7 +280,18 @@ def apply_preprocessing_algo(
     )
 
 
-def evaluate_baseline(results, dataset, dataset_name, dataset_info):
+@typechecked
+def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+    """
+    Run models using no unfairness mitigation techniques.
+    Measure and save the performances.
+
+    :param results: The dictionnary storing results for the run
+    :param dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_name: The name of the dataset
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: The updated results dictionnary
+    """
     results[dataset_name]["baseline"] = []
 
     # Splitting dataset over different seeds
@@ -297,8 +308,18 @@ def evaluate_baseline(results, dataset, dataset_name, dataset_info):
     return results
 
 
-def evaluate_mitigation_techniques(results, dataset, dataset_name, dataset_info):
+@typechecked
+def evaluate_mitigation_techniques(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+    """
+    Run the model using unfairness mitigation techniques while doing hyperparameter tuning.
+    Measure and save the performances.
 
+    :param results: The dictionnary storing results for the run
+    :param dataset: an AIF360 dataset containing the test examples with their labels
+    :param dataset_name: The name of the dataset
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: The updated results dictionnary
+    """
     for (
         debaiasing_algo_name,
         hyperparameters_space,
