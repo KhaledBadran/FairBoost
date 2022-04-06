@@ -1,5 +1,6 @@
 # import ipdb
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 
 class Preprocessing:
@@ -35,14 +36,6 @@ class NoPreprocessing(Preprocessing):
 
 
 class DIR(Preprocessing):
-    # TODO: what do we do with deletion of private attribs
-    # def __delete_protected(self, dataset):
-    #     index = []
-    #     for protected_attribute_name in dataset.protected_attribute_names:
-    #         index.append(dataset.feature_names.index(protected_attribute_name))
-    #     dataset.features = np.delete(dataset.features, index, axis=1)
-    #     return dataset
-
     def transform(self, dataset):
         return super().fit_transform(dataset)
 
@@ -62,10 +55,29 @@ class OptimPreproc(Preprocessing):
 
 
 class Reweighing(Preprocessing):
+    def __init__(self, preprocessing, transform_params={}):
+        super().__init__(preprocessing, transform_params)
+        self.scaler = StandardScaler()
+
+    def fit_transform(self, dataset):
+        dataset.features = self.scaler.fit_transform(dataset.features)
+        return super().fit_transform(dataset)
+
     def transform(self, dataset):
+        dataset.features = self.scaler.transform(dataset.features)
         # Reweight should not reweight test data set.
         return dataset.features, dataset.labels, dataset.instance_weights
 
 
 class LFR(Preprocessing):
-    pass
+    def __init__(self, preprocessing, transform_params={}):
+        super().__init__(preprocessing, transform_params)
+        self.scaler = StandardScaler()
+
+    def fit_transform(self, dataset):
+        dataset.features = self.scaler.fit_transform(dataset.features)
+        return super().fit_transform(dataset)
+
+    def transform(self, dataset):
+        dataset.features = self.scaler.transform(dataset.features)
+        return super().transform(dataset)
