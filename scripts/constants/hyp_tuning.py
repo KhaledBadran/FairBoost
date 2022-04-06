@@ -16,7 +16,6 @@ from sklearn.model_selection import ParameterGrid
 
 from FairBoost.main import Bootstrap_type
 
-
 # ------------------------------- DATASET HYPERPARAMETERS ------------------------------- #
 DATASETS = {
     "german": {
@@ -61,45 +60,34 @@ DATASETS = {
 # ------------------------------- CLASSIFIERS GRID ------------------------------- #
 CLASSIFIERS_HYPERPARAMETERS = {
     "Logistic Regression": {},
-    "Random Forest": {"max_depth": 10, "n_estimators": 5, "max_features": 2},
+    "Random Forest": {'max_depth': 10, 'n_estimators': 5, 'max_features': 2},
 }
 
 CLASSIFIERS = {
-    "Logistic Regression": LogisticRegression(
-        **CLASSIFIERS_HYPERPARAMETERS["Logistic Regression"]
-    ),
-    "Random Forest": RandomForestClassifier(
-        **CLASSIFIERS_HYPERPARAMETERS["Random Forest"]
-    ),
+    "Logistic Regression": LogisticRegression(**CLASSIFIERS_HYPERPARAMETERS['Logistic Regression']),
+    "Random Forest": RandomForestClassifier(**CLASSIFIERS_HYPERPARAMETERS['Random Forest']),
 }
 
 # ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
-DisparateImpactRemover_param_grid = {
-    "init": list(ParameterGrid({"repair_level": [0.01, 0.5, 1.0]}))
-}
+DisparateImpactRemover_param_grid = [{'init': {'repair_level': 0.5}}]
 
-LFR_param_grid = {
-    "init": list(ParameterGrid({"k": [5], "Ax": [0.01], "Ay": [1.0], "Az": [50.0]})),
-    "transform": list(ParameterGrid({"threshold": [0.01, 0.5, 0.1]})),
-}
+LFR_param_grid = [{'init': {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
+                  'transform': {"threshold": 0.5}}]
 
 FairBoost_param_grid = {
-    "bootstrap_type": [
-        Bootstrap_type.NONE,
-        Bootstrap_type.DEFAULT,
-        Bootstrap_type.CUSTOM,
-    ]
+    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
 }
 
 
 # ------------------------------- TOP-LEVEL HYPERPARAMETER GRIDS ------------------------------- #
 HYPERPARAMETERS = {
     "Reweighing": [{}],
-    "DisparateImpactRemover": list(ParameterGrid(DisparateImpactRemover_param_grid)),
+    "DisparateImpactRemover": DisparateImpactRemover_param_grid,
     "OptimPreproc": [{}],
-    "LFR": list(ParameterGrid(LFR_param_grid)),
+    "LFR": LFR_param_grid,
 }
+
 FAIRBOOST_HYPERPARAMETERS = {
-    "preprocessing": list(ParameterGrid(HYPERPARAMETERS)),
-    "init": list(ParameterGrid(FairBoost_param_grid)),
+    'preprocessing': list(ParameterGrid(HYPERPARAMETERS)),
+    'init': list(ParameterGrid(FairBoost_param_grid))
 }
