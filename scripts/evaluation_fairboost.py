@@ -7,6 +7,7 @@ from unittest import result
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from datetime import datetime
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import ParameterGrid
@@ -21,7 +22,7 @@ from typeguard import typechecked
 from typing import Dict
 
 
-from constants.splits import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS, FairBoost_param_grid, SEEDS
+from constants.splits import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS, FairBoost_param_grid, SEEDS, CLASSIFIERS_HYPERPARAMETERS
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
 from utils import save_results, measure_results, merge_results_array
@@ -266,7 +267,12 @@ def main():
             results, dataset, dataset_name, dataset_info)
 
     # save the results to file
-    save_results(filename='fairboost_splits', results=results)
+    experiment_details = {'DATE': datetime.now().strftime("%d/%m/%Y %H:%M"),
+                            'CLASSIFIERS_HYPERPARAMETERS': CLASSIFIERS_HYPERPARAMETERS,
+                           'FAIRBOOST_HYPERPARAMETERS': FAIRBOOST_HYPERPARAMETERS,
+                          'SEEDS': SEEDS}
+
+    save_results(filename='fairboost_splits', results=results, experiment_details=experiment_details)
 
 
 if __name__ == "__main__":

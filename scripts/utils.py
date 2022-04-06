@@ -10,22 +10,30 @@ from sklearn.metrics import accuracy_score
 
 
 @typechecked
-def save_results(filename: str, results: Dict):
+def save_results(filename: str, results: Dict, experiment_details: Dict = {}):
     """
     Saves a given dictionary to a JSON file.
 
+    :param experiment_details: configurations in the constants files used to run the experiment (e.g., seeds)
+     and date of experiment
     :param filename: The name of the output file
     :param results: The results to be saved
     """
+
+    experiment_results = {"experiment_details": experiment_details, "results": results}
     dir_path = os.path.dirname(os.path.realpath(__file__))
     results_dir = Path(dir_path, "results")
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(f"{results_dir}/{filename}.json", "w") as fp:
-        json.dump(results, fp, indent=4)
+        json.dump(experiment_results, fp, indent=4)
 
 
 @typechecked
-def measure_results(test_dataset: BinaryLabelDataset, classified_dataset: BinaryLabelDataset, dataset_info: Dict) -> Dict:
+def measure_results(
+    test_dataset: BinaryLabelDataset,
+    classified_dataset: BinaryLabelDataset,
+    dataset_info: Dict,
+) -> Dict:
     """
     Computes fairness and accuracy metrics.
 
@@ -63,5 +71,6 @@ def merge_results_array(results):
         for algo_type in result:
             for metric_name in result[algo_type]:
                 metrics_agg[algo_type][metric_name].append(
-                    result[algo_type][metric_name])
+                    result[algo_type][metric_name]
+                )
     return metrics_agg

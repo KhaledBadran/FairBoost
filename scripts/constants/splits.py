@@ -59,11 +59,15 @@ DATASETS = {
 }
 
 # ------------------------------- CLASSIFIERS GRID ------------------------------- #
+CLASSIFIERS_HYPERPARAMETERS = {
+    "Logistic Regression": {},
+    "Random Forest": {'max_depth': 10, 'n_estimators': 5, 'max_features': 2},
+
+}
+
 CLASSIFIERS = {
-    "Logistic Regression": LogisticRegression(),
-    "Random Forest": RandomForestClassifier(
-        max_depth=10, n_estimators=5, max_features=2
-    ),
+    "Logistic Regression": LogisticRegression(**CLASSIFIERS_HYPERPARAMETERS['Logistic Regression']),
+    "Random Forest": RandomForestClassifier(**CLASSIFIERS_HYPERPARAMETERS['Random Forest']),
 }
 
 # ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
