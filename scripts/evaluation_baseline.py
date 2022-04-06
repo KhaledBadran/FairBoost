@@ -86,35 +86,6 @@ def train_test_models(
 
 
 @typechecked
-def initial_preprocessing(
-    train_dataset: BinaryLabelDataset, test_dataset: BinaryLabelDataset
-) -> Tuple[BinaryLabelDataset, BinaryLabelDataset]:
-    """
-    Applies scaling to the dataset
-    :param train_dataset: an AIF360 dataset containing the training examples with their labels
-    :param test_dataset: an AIF360 dataset containing the test examples with their labels
-    :return: a scaled training and test AIF360 datasets
-    """
-    # get X and y for training and test splits
-    X_train, y_train = train_dataset.features, train_dataset.labels.ravel()
-    X_test, y_test = test_dataset.features, test_dataset.labels.ravel()
-
-    # Apply standard scaler
-    scaler = StandardScaler()
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-
-    train_dataset_preprocessed = train_dataset.copy()
-    train_dataset_preprocessed.features = X_train
-
-    test_dataset_preprocessed = test_dataset.copy()
-    test_dataset_preprocessed.features = X_test
-
-    return train_dataset_preprocessed, test_dataset_preprocessed
-
-
-@typechecked
 def apply_reweighing(
     train_dataset: BinaryLabelDataset,
     test_dataset: BinaryLabelDataset,
@@ -126,6 +97,12 @@ def apply_reweighing(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via reweighing
     """
+    # Apply standard scaler
+    scaler = StandardScaler()
+    scaler = scaler.fit(train_dataset.features)
+    train_dataset.features = scaler.transform(train_dataset.features)
+    test_dataset.features = scaler.transform(test_dataset.features)
+
     RW = Reweighing(
         privileged_groups=dataset_info["privileged_groups"],
         unprivileged_groups=dataset_info["unprivileged_groups"],
@@ -153,18 +130,9 @@ def apply_DIR(
         sensitive_attribute=dataset_info["sensitive_attribute"],
         repair_level=hyperparameters['init']["repair_level"],
     )
-    index = train_dataset.feature_names.index(
-        dataset_info["sensitive_attribute"])
 
     train_dataset_DIR = DIR.fit_transform(train_dataset)
     test_dataset_DIR = DIR.fit_transform(test_dataset)
-
-    # TODO: what to do with it
-    # delete protected columns
-    # train_dataset_DIR.features = np.delete(
-    #     train_dataset_DIR.features, index, axis=1)
-    # test_dataset_DIR.features = np.delete(
-    #     test_dataset_DIR.features, index, axis=1)
 
     return train_dataset_DIR, test_dataset_DIR
 
@@ -210,6 +178,12 @@ def apply_LFR(
     threshold for the transform method
     :return: a train and test datasets that have been transformed via the LFR technique
     """
+    # Apply standard scaler
+    scaler = StandardScaler()
+    scaler = scaler.fit(train_dataset.features)
+    train_dataset.features = scaler.transform(train_dataset.features)
+    test_dataset.features = scaler.transform(test_dataset.features)
+
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
@@ -297,9 +271,17 @@ def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset
     # Splitting dataset over different seeds
     for seed in SEEDS:
         train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
+        train_dataset, test_dataset = train_split.copy(
+            deepcopy=True), test_split.copy(deepcopy=True)
+
+        # Apply standard scaler
+        scaler = StandardScaler()
+        scaler = scaler.fit(train_dataset.features)
+        train_dataset.features = scaler.transform(train_dataset.features)
+        test_dataset.features = scaler.transform(test_dataset.features)
         # Measuring model performance
         metrics = train_test_models(
-            train_split, test_split, dataset_info=dataset_info)
+            train_dataset, test_dataset, dataset_info=dataset_info)
         results[dataset_name]["baseline"].append(metrics)
 
     # Merging results for clarity
