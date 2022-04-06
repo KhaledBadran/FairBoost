@@ -62,7 +62,6 @@ DATASETS = {
 CLASSIFIERS_HYPERPARAMETERS = {
     "Logistic Regression": {},
     "Random Forest": {'max_depth': 10, 'n_estimators': 5, 'max_features': 2},
-
 }
 
 CLASSIFIERS = {

@@ -31,7 +31,13 @@ from aif360.algorithms.preprocessing import (
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 
 # Experiment constants
-from constants.splits import DATASETS, CLASSIFIERS, HYPERPARAMETERS, SEEDS, CLASSIFIERS_HYPERPARAMETERS
+from constants.splits import (
+    DATASETS,
+    CLASSIFIERS,
+    HYPERPARAMETERS,
+    SEEDS,
+    CLASSIFIERS_HYPERPARAMETERS,
+)
 
 from utils import save_results, measure_results, merge_results_array
 
@@ -77,7 +83,8 @@ def train_test_models(
             classified_dataset = test_dataset.copy()
             classified_dataset.labels = y_pred
             results[clf_name] = measure_results(
-                test_dataset, classified_dataset, dataset_info)
+                test_dataset, classified_dataset, dataset_info
+            )
 
         else:
             print(f"all training labels are same, classifier will not be trained")
@@ -152,10 +159,9 @@ def apply_DIR(
     """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
-        repair_level=hyperparameters['init']["repair_level"],
+        repair_level=hyperparameters["init"]["repair_level"],
     )
-    index = train_dataset.feature_names.index(
-        dataset_info["sensitive_attribute"])
+    index = train_dataset.feature_names.index(dataset_info["sensitive_attribute"])
 
     train_dataset_DIR = DIR.fit_transform(train_dataset)
     test_dataset_DIR = DIR.fit_transform(test_dataset)
@@ -214,22 +220,21 @@ def apply_LFR(
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=hyperparameters['init']["k"],
-        Ax=hyperparameters['init']["Ax"],
-        Ay=hyperparameters['init']["Ay"],
-        Az=hyperparameters['init']["Az"],
+        k=hyperparameters["init"]["k"],
+        Ax=hyperparameters["init"]["Ax"],
+        Ay=hyperparameters["init"]["Ay"],
+        Az=hyperparameters["init"]["Az"],
         verbose=0,  # Default parameters
     )
 
-    LFR_transformer = LFR_transformer.fit(
-        train_dataset, maxiter=5000, maxfun=5000)
+    LFR_transformer = LFR_transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
-        train_dataset, threshold=hyperparameters['transform']["threshold"]
+        train_dataset, threshold=hyperparameters["transform"]["threshold"]
     )
     test_dataset_LFR = LFR_transformer.transform(
-        test_dataset, threshold=hyperparameters['transform']["threshold"]
+        test_dataset, threshold=hyperparameters["transform"]["threshold"]
     )
 
     return train_dataset_LFR, test_dataset_LFR
@@ -282,7 +287,12 @@ def apply_preprocessing_algo(
 
 
 @typechecked
-def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+def evaluate_baseline(
+    results: defaultdict,
+    dataset: BinaryLabelDataset,
+    dataset_name: str,
+    dataset_info: dict,
+):
     """
     Run models using no unfairness mitigation techniques.
     Measure and save the performances.
@@ -299,18 +309,23 @@ def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset
     for seed in SEEDS:
         train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
         # Measuring model performance
-        metrics = train_test_models(
-            train_split, test_split, dataset_info=dataset_info)
+        metrics = train_test_models(train_split, test_split, dataset_info=dataset_info)
         results[dataset_name]["baseline"].append(metrics)
 
     # Merging results for clarity
     results[dataset_name]["baseline"] = merge_results_array(
-        results[dataset_name]["baseline"])
+        results[dataset_name]["baseline"]
+    )
     return results
 
 
 @typechecked
-def evaluate_mitigation_techniques(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+def evaluate_mitigation_techniques(
+    results: defaultdict,
+    dataset: BinaryLabelDataset,
+    dataset_name: str,
+    dataset_info: dict,
+):
     """
     Run the model using unfairness mitigation techniques while doing hyperparameter tuning.
     Measure and save the performances.
@@ -331,8 +346,7 @@ def evaluate_mitigation_techniques(results: defaultdict, dataset: BinaryLabelDat
 
         for hyperparameters in hyperparameters_space:
             results[dataset_name][debaiasing_algo_name].append(
-                {"hyperparameters": hyperparameters,
-                    "results": []}
+                {"hyperparameters": hyperparameters, "results": []}
             )
 
             # Splitting dataset over different seeds
@@ -356,12 +370,16 @@ def evaluate_mitigation_techniques(results: defaultdict, dataset: BinaryLabelDat
                     test_split_transformed,
                     dataset_info=dataset_info,
                 )
-                results[dataset_name][debaiasing_algo_name][-1]['results'].append(
-                    performance_metrics)
+                results[dataset_name][debaiasing_algo_name][-1]["results"].append(
+                    performance_metrics
+                )
 
             # Merging results for clarity
-            results[dataset_name][debaiasing_algo_name][-1]['results'] = merge_results_array(
-                results[dataset_name][debaiasing_algo_name][-1]['results'])
+            results[dataset_name][debaiasing_algo_name][-1][
+                "results"
+            ] = merge_results_array(
+                results[dataset_name][debaiasing_algo_name][-1]["results"]
+            )
     return results
 
 
@@ -375,20 +393,25 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        results = evaluate_baseline(
-            results, dataset, dataset_name, dataset_info)
+        results = evaluate_baseline(results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Unfairness Mitigation techniques ----------")
         results = evaluate_mitigation_techniques(
             results, dataset, dataset_name, dataset_info)
 
     # save the results to file
-    experiment_details = {'DATE': datetime.now().strftime("%d/%m/%Y %H:%M"),
-                            'CLASSIFIERS_HYPERPARAMETERS': CLASSIFIERS_HYPERPARAMETERS,
-                           'HYPERPARAMETERS': HYPERPARAMETERS,
-                           'SEEDS': SEEDS}
+    experiment_details = {
+        "DATE": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "CLASSIFIERS_HYPERPARAMETERS": CLASSIFIERS_HYPERPARAMETERS,
+        "HYPERPARAMETERS": HYPERPARAMETERS,
+        "SEEDS": SEEDS,
+    }
 
-    save_results(filename='baseline_splits', results=results, experiment_details=experiment_details)
+    save_results(
+        filename="baseline_splits",
+        results=results,
+        experiment_details=experiment_details,
+    )
 
 
 if __name__ == "__main__":
