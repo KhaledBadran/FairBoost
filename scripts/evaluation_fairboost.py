@@ -16,13 +16,24 @@ from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.datasets import BinaryLabelDataset
 from aif360.explainers import MetricTextExplainer
 from aif360.algorithms.preprocessing import (
-    Reweighing, DisparateImpactRemover, LFR, OptimPreproc,)
+    Reweighing,
+    DisparateImpactRemover,
+    LFR,
+    OptimPreproc,
+)
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 from typeguard import typechecked
 from typing import Dict
 
 
-from constants.splits import DATASETS, CLASSIFIERS, FAIRBOOST_HYPERPARAMETERS, FairBoost_param_grid, SEEDS, CLASSIFIERS_HYPERPARAMETERS
+from constants.splits import (
+    DATASETS,
+    CLASSIFIERS,
+    FAIRBOOST_HYPERPARAMETERS,
+    FairBoost_param_grid,
+    SEEDS,
+    CLASSIFIERS_HYPERPARAMETERS,
+)
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
 from utils import save_results, measure_results, merge_results_array
@@ -31,12 +42,14 @@ np.random.seed(42)
 
 
 @typechecked
-def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
-                                test_dataset: BinaryLabelDataset,
-                                dataset_info: Dict,
-                                hyperparameters: Dict) -> Dict:
+def train_test_bagging_baseline(
+    train_dataset: BinaryLabelDataset,
+    test_dataset: BinaryLabelDataset,
+    dataset_info: Dict,
+    hyperparameters: Dict,
+) -> Dict:
     """
-    Trains Fairboost for the given hyperparameters, with different classifiers, using no preprocessing functions. 
+    Trains Fairboost for the given hyperparameters, with different classifiers, using no preprocessing functions.
     Then computes fairness and accuracy metrics.
 
     :param train_dataset: an AIF360 dataset containing the training examples with their labels
@@ -57,7 +70,8 @@ def train_test_bagging_baseline(train_dataset: BinaryLabelDataset,
         classified_dataset = test_dataset.copy()
         classified_dataset.labels = y_pred
         results[clf_name] = measure_results(
-            test_dataset, classified_dataset, dataset_info)
+            test_dataset, classified_dataset, dataset_info
+        )
     return results
 
 
@@ -88,7 +102,7 @@ def init_DIR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
     """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
-        repair_level=hyperparameters['init']["repair_level"],
+        repair_level=hyperparameters["init"]["repair_level"],
     )
     return wrappers.DIR(DIR)
 
@@ -118,22 +132,24 @@ def init_LFR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=hyperparameters['init']["k"],
-        Ax=hyperparameters['init']["Ax"],
-        Ay=hyperparameters['init']["Ay"],
-        Az=hyperparameters['init']["Az"],
+        k=hyperparameters["init"]["k"],
+        Ax=hyperparameters["init"]["Ax"],
+        Ay=hyperparameters["init"]["Ay"],
+        Az=hyperparameters["init"]["Az"],
         verbose=0,  # Default parameters
     )
-    return wrappers.LFR(LFR_transformer, transform_params=hyperparameters['transform'])
+    return wrappers.LFR(LFR_transformer, transform_params=hyperparameters["transform"])
 
 
 @typechecked
-def train_test_fairboost(train_dataset: BinaryLabelDataset,
-                         test_dataset: BinaryLabelDataset,
-                         dataset_info: Dict,
-                         hyperparameters: Dict) -> Dict:
+def train_test_fairboost(
+    train_dataset: BinaryLabelDataset,
+    test_dataset: BinaryLabelDataset,
+    dataset_info: Dict,
+    hyperparameters: Dict,
+) -> Dict:
     """
-    Trains Fairboost for the given hyperparameters, with different classifiers. 
+    Trains Fairboost for the given hyperparameters, with different classifiers.
     Then computes fairness and accuracy metrics.
 
     :param train_dataset: an AIF360 dataset containing the training examples with their labels
@@ -143,21 +159,21 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
     :return: a dictionary of accuracy and fairness metrics
     """
     results = defaultdict(dict)
-    RW = init_reweighting(
-        dataset_info, hyperparameters['preprocessing']['Reweighing'])
+    RW = init_reweighting(dataset_info, hyperparameters["preprocessing"]["Reweighing"])
     DIR = init_DIR(
-        dataset_info, hyperparameters['preprocessing']['DisparateImpactRemover'])
+        dataset_info, hyperparameters["preprocessing"]["DisparateImpactRemover"]
+    )
     OP = init_OptimPreproc(
-        dataset_info, hyperparameters['preprocessing']['OptimPreproc'])
-    LFR_transformer = init_LFR(
-        dataset_info, hyperparameters['preprocessing']['LFR'])
+        dataset_info, hyperparameters["preprocessing"]["OptimPreproc"]
+    )
+    LFR_transformer = init_LFR(dataset_info, hyperparameters["preprocessing"]["LFR"])
     pp = [RW, DIR, OP, LFR_transformer]
 
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nFairboost classifier name: {clf_name}")
         try:
             # Training + prediction
-            ens = FairBoost(clf, pp, **hyperparameters['init'])
+            ens = FairBoost(clf, pp, **hyperparameters["init"])
             ens = ens.fit(train_dataset)
             y_pred = ens.predict(test_dataset)
 
@@ -165,7 +181,8 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
             classified_dataset = test_dataset.copy()
             classified_dataset.labels = y_pred
             results[clf_name] = measure_results(
-                test_dataset, classified_dataset, dataset_info)
+                test_dataset, classified_dataset, dataset_info
+            )
         except Exception as e:
             print(f"Failed to run Fairboost with given hyper params. The error msg is:")
             print(e)
@@ -174,7 +191,12 @@ def train_test_fairboost(train_dataset: BinaryLabelDataset,
 
 
 @typechecked
-def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict) -> defaultdict:
+def evaluate_baseline(
+    results: defaultdict,
+    dataset: BinaryLabelDataset,
+    dataset_name: str,
+    dataset_info: dict,
+) -> defaultdict:
     """
     Run Fairboost with no preprocessing using different hyperparameter configurations.
     Measure and save the performances.
@@ -190,28 +212,31 @@ def evaluate_baseline(results: defaultdict, dataset: BinaryLabelDataset, dataset
     # Measuring Fairboost performances for different hyperparameter configurations (without unfairness mitigation techniques)
     for hyperparameters in ParameterGrid(FairBoost_param_grid):
         results[dataset_name]["baseline"].append(
-            {"hyperparameters": hyperparameters,
-                "results": []}
+            {"hyperparameters": hyperparameters, "results": []}
         )
         # Splitting dataset over different seeds
         for seed in SEEDS:
-            train_split, test_split = dataset.split(
-                [0.7], shuffle=True, seed=seed)
+            train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
             # Measuring model performance
             performance_metrics = train_test_bagging_baseline(
                 train_split, test_split, dataset_info, hyperparameters
             )
-            results[dataset_name]["baseline"][-1]['results'].append(
-                performance_metrics)
+            results[dataset_name]["baseline"][-1]["results"].append(performance_metrics)
 
         # Merging results for clarity
-        results[dataset_name]["baseline"][-1]['results'] = merge_results_array(
-            results[dataset_name]["baseline"][-1]['results'])
+        results[dataset_name]["baseline"][-1]["results"] = merge_results_array(
+            results[dataset_name]["baseline"][-1]["results"]
+        )
     return results
 
 
 @typechecked
-def evaluate_fairboost(results: defaultdict, dataset: BinaryLabelDataset, dataset_name: str, dataset_info: dict):
+def evaluate_fairboost(
+    results: defaultdict,
+    dataset: BinaryLabelDataset,
+    dataset_name: str,
+    dataset_info: dict,
+):
     """
     Run Fairboost using different hyperparameter configurations.
     Measure and save the performances.
@@ -229,23 +254,24 @@ def evaluate_fairboost(results: defaultdict, dataset: BinaryLabelDataset, datase
     for i, hyperparameters in enumerate(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)):
         print(f"\n---------- Progress: {i}/{n_combinations} ----------")
         results[dataset_name]["fairboost"].append(
-            {"hyperparameters": hyperparameters,
-                "results": []}
+            {"hyperparameters": hyperparameters, "results": []}
         )
 
         # Splitting dataset over different seeds
         for seed in SEEDS:
-            train_split, test_split = dataset.split(
-                [0.7], shuffle=True, seed=seed)
+            train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
             # Measuring model performance
             performance_metrics = train_test_fairboost(
-                train_split, test_split, dataset_info, hyperparameters)
-            results[dataset_name]["fairboost"][-1]['results'].append(
-                performance_metrics)
+                train_split, test_split, dataset_info, hyperparameters
+            )
+            results[dataset_name]["fairboost"][-1]["results"].append(
+                performance_metrics
+            )
 
         # Merging results for clarity
-        results[dataset_name]["fairboost"][-1]['results'] = merge_results_array(
-            results[dataset_name]["fairboost"][-1]['results'])
+        results[dataset_name]["fairboost"][-1]["results"] = merge_results_array(
+            results[dataset_name]["fairboost"][-1]["results"]
+        )
     return results
 
 
@@ -259,20 +285,24 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        results = evaluate_baseline(
-            results, dataset, dataset_name, dataset_info)
+        results = evaluate_baseline(results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Fairboost ----------")
-        results = evaluate_fairboost(
-            results, dataset, dataset_name, dataset_info)
+        results = evaluate_fairboost(results, dataset, dataset_name, dataset_info)
 
     # save the results to file
-    experiment_details = {'DATE': datetime.now().strftime("%d/%m/%Y %H:%M"),
-                            'CLASSIFIERS_HYPERPARAMETERS': CLASSIFIERS_HYPERPARAMETERS,
-                           'FAIRBOOST_HYPERPARAMETERS': FAIRBOOST_HYPERPARAMETERS,
-                          'SEEDS': SEEDS}
+    experiment_details = {
+        "DATE": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "CLASSIFIERS_HYPERPARAMETERS": CLASSIFIERS_HYPERPARAMETERS,
+        "FAIRBOOST_HYPERPARAMETERS": FAIRBOOST_HYPERPARAMETERS,
+        "SEEDS": SEEDS,
+    }
 
-    save_results(filename='fairboost_splits', results=results, experiment_details=experiment_details)
+    save_results(
+        filename="fairboost_splits",
+        results=results,
+        experiment_details=experiment_details,
+    )
 
 
 if __name__ == "__main__":
