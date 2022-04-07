@@ -31,6 +31,10 @@ DATASETS = {
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
         },
+        "LFR_params": {
+            "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
+            "transform": {"threshold": 0.5},
+        },
     },
     "adult": {
         "sensitive_attribute": "sex",
@@ -43,6 +47,10 @@ DATASETS = {
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
         },
+        "LFR_params": {
+            "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
+            "transform": {"threshold": 0.5},
+        },
     },
     "compas": {
         "sensitive_attribute": "sex",
@@ -54,6 +62,10 @@ DATASETS = {
             "epsilon": 0.05,
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
+        },
+        "LFR_params": {
+            "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
+            "transform": {"threshold": 0.5},
         },
     },
 }

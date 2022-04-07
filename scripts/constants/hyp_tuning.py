@@ -30,6 +30,10 @@ DATASETS = {
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
         },
+        "LFR_params": {
+            "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
+            "transform": {"threshold": 0.5},
+        },
     },
     "adult": {
         "sensitive_attribute": "sex",
@@ -41,6 +45,10 @@ DATASETS = {
             "epsilon": 0.05,
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
+        },
+        "LFR_params": {
+            "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
+            "transform": {"threshold": 0.5},
         },
     },
     "compas": {
@@ -54,28 +62,44 @@ DATASETS = {
             "clist": [0.99, 1.99, 2.99],
             "dlist": [0.1, 0.05, 0],
         },
+        "LFR_params": {
+            "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
+            "transform": {"threshold": 0.5},
+        },
     },
 }
 
 # ------------------------------- CLASSIFIERS GRID ------------------------------- #
 CLASSIFIERS_HYPERPARAMETERS = {
     "Logistic Regression": {},
-    "Random Forest": {'max_depth': 10, 'n_estimators': 5, 'max_features': 2},
+    "Random Forest": {"max_depth": 10, "n_estimators": 5, "max_features": 2},
 }
 
 CLASSIFIERS = {
-    "Logistic Regression": LogisticRegression(**CLASSIFIERS_HYPERPARAMETERS['Logistic Regression']),
-    "Random Forest": RandomForestClassifier(**CLASSIFIERS_HYPERPARAMETERS['Random Forest']),
+    "Logistic Regression": LogisticRegression(
+        **CLASSIFIERS_HYPERPARAMETERS["Logistic Regression"]
+    ),
+    "Random Forest": RandomForestClassifier(
+        **CLASSIFIERS_HYPERPARAMETERS["Random Forest"]
+    ),
 }
 
 # ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
-DisparateImpactRemover_param_grid = [{'init': {'repair_level': 0.5}}]
+DisparateImpactRemover_param_grid = [{"init": {"repair_level": 0.5}}]
 
-LFR_param_grid = [{'init': {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
-                  'transform': {"threshold": 0.5}}]
+LFR_param_grid = [
+    {
+        "init": {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
+        "transform": {"threshold": 0.5},
+    }
+]
 
 FairBoost_param_grid = {
-    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
+    "bootstrap_type": [
+        Bootstrap_type.NONE,
+        Bootstrap_type.DEFAULT,
+        Bootstrap_type.CUSTOM,
+    ]
 }
 
 
@@ -88,6 +112,6 @@ HYPERPARAMETERS = {
 }
 
 FAIRBOOST_HYPERPARAMETERS = {
-    'preprocessing': list(ParameterGrid(HYPERPARAMETERS)),
-    'init': list(ParameterGrid(FairBoost_param_grid))
+    "preprocessing": list(ParameterGrid(HYPERPARAMETERS)),
+    "init": list(ParameterGrid(FairBoost_param_grid)),
 }
