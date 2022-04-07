@@ -203,7 +203,8 @@ def apply_LFR(
         verbose=0,  # Default parameters
     )
 
-    LFR_transformer = LFR_transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
+    LFR_transformer = LFR_transformer.fit(
+        train_dataset, maxiter=5000, maxfun=5000)
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
@@ -259,6 +260,9 @@ def apply_preprocessing_algo(
     except Exception as e:
         print(f"Failed to pre-process the dataset. The error msg is:")
         print(e)
+
+    # Make sure test labels are not modified
+    test_dataset_transformed.labels = test_dataset.labels
 
     return (
         train_dataset_transformed,
@@ -384,7 +388,8 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        results = evaluate_baseline(results, dataset, dataset_name, dataset_info)
+        results = evaluate_baseline(
+            results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Unfairness Mitigation techniques ----------")
         results = evaluate_mitigation_techniques(
