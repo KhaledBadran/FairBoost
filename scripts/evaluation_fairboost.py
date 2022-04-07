@@ -132,13 +132,13 @@ def init_LFR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=hyperparameters["init"]["k"],
-        Ax=hyperparameters["init"]["Ax"],
-        Ay=hyperparameters["init"]["Ay"],
-        Az=hyperparameters["init"]["Az"],
+        k=dataset_info['LFR_params']["init"]["k"],
+        Ax=dataset_info['LFR_params']["init"]["Ax"],
+        Ay=dataset_info['LFR_params']["init"]["Ay"],
+        Az=dataset_info['LFR_params']["init"]["Az"],
         verbose=0,  # Default parameters
     )
-    return wrappers.LFR(LFR_transformer, transform_params=hyperparameters["transform"])
+    return wrappers.LFR(LFR_transformer, transform_params=dataset_info['LFR_params']["transform"])
 
 
 @typechecked

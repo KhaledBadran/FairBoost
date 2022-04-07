@@ -16,7 +16,17 @@ from sklearn.model_selection import ParameterGrid
 
 from FairBoost.main import Bootstrap_type
 
-SEEDS = [1, 2, 3, 4]
+SEEDS = [1, 2]
+
+# ------------------------------- GERMAN DATASET INITIALIZATION ------------------------------- #
+def initialize_german_dataset():
+    ds = load_preproc_data_german(["sex"])
+    ds.labels = ds.labels % 2  # turns 2s into 0 while keeping 1s the same
+    ds.favorable_label = 1
+    ds.unfavorable_label = 0
+    return ds
+
+
 # ------------------------------- DATASET HYPERPARAMETERS ------------------------------- #
 DATASETS = {
     "german": {
@@ -24,7 +34,7 @@ DATASETS = {
         "sensitive_attribute": "sex",
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
-        "original_dataset": load_preproc_data_german(["sex"]),
+        "original_dataset": initialize_german_dataset(),
         "optim_options": {
             "distortion_fun": get_distortion_german,
             "epsilon": 0.1,
@@ -84,9 +94,6 @@ CLASSIFIERS = {
 # ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
 DisparateImpactRemover_param_grid = [{'init': {'repair_level': 0.5}}]
 
-LFR_param_grid = [{'init': {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
-                  'transform': {"threshold": 0.5}}]
-
 FairBoost_param_grid = {
     'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
 }
@@ -97,7 +104,7 @@ HYPERPARAMETERS = {
     "Reweighing": [{}],
     "DisparateImpactRemover": DisparateImpactRemover_param_grid,
     "OptimPreproc": [{}],
-    "LFR": LFR_param_grid,
+    "LFR": [{}],
 }
 
 FAIRBOOST_HYPERPARAMETERS = {

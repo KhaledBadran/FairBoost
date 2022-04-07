@@ -195,10 +195,10 @@ def apply_LFR(
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=hyperparameters["init"]["k"],
-        Ax=hyperparameters["init"]["Ax"],
-        Ay=hyperparameters["init"]["Ay"],
-        Az=hyperparameters["init"]["Az"],
+        k=dataset_info['LFR_params']["init"]["k"],
+        Ax=dataset_info['LFR_params']["init"]["Ax"],
+        Ay=dataset_info['LFR_params']["init"]["Ay"],
+        Az=dataset_info['LFR_params']["init"]["Az"],
         verbose=0,  # Default parameters
     )
 
@@ -206,10 +206,10 @@ def apply_LFR(
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
-        train_dataset, threshold=hyperparameters["transform"]["threshold"]
+        train_dataset, threshold=dataset_info['LFR_params']["transform"]["threshold"]
     )
     test_dataset_LFR = LFR_transformer.transform(
-        test_dataset, threshold=hyperparameters["transform"]["threshold"]
+        test_dataset, threshold=dataset_info['LFR_params']["transform"]["threshold"]
     )
 
     return train_dataset_LFR, test_dataset_LFR
