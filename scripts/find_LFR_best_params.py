@@ -68,7 +68,7 @@ def main():
         # get the rows of each dataset
         dataset_df = df.loc[df['dataset'] == dataset]
 
-        # find the minimum average_score
+        # find the minimum contraharmonic_mean
         best_param_results = \
             dataset_df[dataset_df['contraharmonic_mean'] == dataset_df['contraharmonic_mean'].min()].to_dict(orient='records')[0]
 
