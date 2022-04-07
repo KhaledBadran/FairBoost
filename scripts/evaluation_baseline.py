@@ -157,6 +157,7 @@ def apply_OptimPreproc(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via the Optimized Preprocessing technique
     """
+    train_dataset_OP, test_dataset_OP = train_dataset.copy(deepcopy=True), test_dataset.copy(deepcopy=True)
 
     OP = OptimPreproc(OptTools, dataset_info["optim_options"], verbose=False)
 
@@ -231,6 +232,10 @@ def apply_preprocessing_algo(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via one of the preprocessing techniques
     """
+
+    # just an initialization
+    train_dataset_transformed, test_dataset_transformed = train_dataset.copy(deepcopy=True), test_dataset.copy(deepcopy=True)
+
     try:
         if algo_name == "Reweighing":
             train_dataset_transformed, test_dataset_transformed = apply_reweighing(

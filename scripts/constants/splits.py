@@ -16,7 +16,7 @@ from sklearn.model_selection import ParameterGrid
 
 from FairBoost.main import Bootstrap_type
 
-SEEDS = [1, 2]
+SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 # ------------------------------- GERMAN DATASET INITIALIZATION ------------------------------- #
 def initialize_german_dataset():
