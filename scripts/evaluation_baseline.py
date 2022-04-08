@@ -3,38 +3,22 @@
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_meta_classifier.ipynb
 # https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
 import numpy as np
-import pandas as pd
-import json
 from collections import defaultdict
 from datetime import datetime
-
-# Fairness metrics
-from aif360.metrics import BinaryLabelDatasetMetric
-from aif360.metrics import ClassificationMetric
-from aif360.datasets import BinaryLabelDataset
-from sklearn.metrics import accuracy_score
-
-# Explainers
-from aif360.explainers import MetricTextExplainer
-
-# Scalers
 from sklearn.preprocessing import StandardScaler
-
-# Bias mitigation techniques
+from aif360.datasets import BinaryLabelDataset
 from aif360.algorithms.preprocessing import (
     Reweighing,
     DisparateImpactRemover,
     LFR,
     OptimPreproc,
 )
-
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 
 # Experiment constants
-from constants.splits import (
+from configs.constants import (
     DATASETS,
     CLASSIFIERS,
-    HYPERPARAMETERS,
     SEEDS,
     CLASSIFIERS_HYPERPARAMETERS,
 )
@@ -44,7 +28,7 @@ from utils import save_results, measure_results, merge_results_array
 
 # typechecking
 from typeguard import typechecked
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Tuple
 
 np.random.seed(0)
 
@@ -335,12 +319,10 @@ def evaluate_mitigation_techniques(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: The updated results dictionnary
     """
-    # Per-dataset hyperparameters overwrite general hyperparameters
-    m_hyperparameters = {**HYPERPARAMETERS, **dataset_info['hyperparams']}
     for (
         debaiasing_algo_name,
         hyperparameters_space,
-    ) in m_hyperparameters.items():
+    ) in dataset_info['hyperparams'].items():
         print(f"\n\n####After applying {debaiasing_algo_name}######\n")
 
         results[dataset_name][debaiasing_algo_name] = []

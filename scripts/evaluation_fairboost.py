@@ -2,21 +2,13 @@
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_meta_classifier.ipynb
 # https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
-from distutils.command.sdist import sdist
-import json
-from textwrap import wrap
-from unittest import result
 import numpy as np
-import pandas as pd
 from collections import defaultdict
 from datetime import datetime
 
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import ParameterGrid
 
-from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.datasets import BinaryLabelDataset
-from aif360.explainers import MetricTextExplainer
 from aif360.algorithms.preprocessing import (
     Reweighing,
     DisparateImpactRemover,
@@ -28,16 +20,15 @@ from typeguard import typechecked
 from typing import Dict
 
 
-from constants.splits import (
+from configs.constants import (
     DATASETS,
     CLASSIFIERS,
-    HYPERPARAMETERS,
     FairBoost_param_grid,
     SEEDS,
     CLASSIFIERS_HYPERPARAMETERS,
     Preproc_name,
 )
-from FairBoost.main import FairBoost, Bootstrap_type
+from FairBoost.main import FairBoost
 from FairBoost import wrappers
 from utils import save_results, measure_results, merge_results_array
 
@@ -262,14 +253,10 @@ def get_fairboost_param_grid(dataset_info: Dict) -> list:
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: The search grid
     """
-    # Per-dataset hyperparameters overwrite general hyperparameters
-    preprocessing_hyperparams = {
-        **HYPERPARAMETERS, **dataset_info['hyperparams']}
-
     # Fetches the hyperparams per preprocessing algo
     preprocessing = []
     for preproc_combination in FairBoost_param_grid['preprocessing']:
-        p_hyp = {key: preprocessing_hyperparams[key]
+        p_hyp = {key: dataset_info['hyperparams'][key]
                  for key in preproc_combination}
         preprocessing = [*preprocessing, *list(ParameterGrid(p_hyp))]
 
