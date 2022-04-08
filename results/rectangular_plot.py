@@ -78,7 +78,7 @@ def generate_data(data: Dict, dataset_name="", classifier_name=""):
 
 
 @typechecked
-def rectangular_plot(data: Dict, dataset_name="", classifier_name=""):
+def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""):
     """
     Plots the rectangles plots.
             Parameters:
@@ -91,8 +91,9 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name=""):
                  classifier_name + " trained on " + dataset_name + " dataset"
 
     g = (ggplot(dataframe)
-         + scale_x_continuous(name="accuracy",  limits=(0.5,1))
-         + scale_y_continuous(name="fairness",  limits=(0.5,1))
+         + scale_x_continuous(name="accuracy")
+         + scale_y_continuous(name="fairness")
+         # + scale_y_continuous(name="fairness", limits=(0,1.2))
          + geom_rect(data=dataframe, mapping=aes(xmin=dataframe["x1"], xmax=dataframe["x2"], ymin=dataframe["y1"],
                                                  ymax=dataframe["y2"], fill=dataframe["t"]),alpha=1)
                      # color="black", alpha=1)
@@ -103,15 +104,19 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name=""):
          + theme(legend_margin=-10, legend_box_spacing=0)
          )
     print(g)
-    g.save("plots/baseline/"+dataset_name+"-"+classifier_name+".png")
+    g.save(plots_path+dataset_name+"-"+classifier_name+".png")
     return g
 
 
 data = read_data_baseline("json_files/baseline_splits.json")
+plots_path = "plots/baseline/"
+
 # data = read_data_fairboost("json_files/fairboost_splits.json")
+# plots_path = "plots/fairboost/"
+
 
 datasets = ["german", "adult", "compas"]
 classifiers = ["Logistic Regression", "Random Forest"]
 for dataset in datasets:
     for classifier in classifiers:
-        rectangular_plot(data, dataset_name=dataset, classifier_name=classifier)
+        rectangular_plot(data,plots_path = plots_path, dataset_name=dataset, classifier_name=classifier)
