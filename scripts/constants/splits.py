@@ -16,7 +16,27 @@ from sklearn.model_selection import ParameterGrid
 
 from FairBoost.main import Bootstrap_type
 
-SEEDS = [1, 2, 3, 4]
+SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
+DisparateImpactRemover_param_grid = [{"init": {"repair_level": 0.5}}]
+
+FairBoost_param_grid = {
+    "bootstrap_type": [
+        Bootstrap_type.NONE,
+        Bootstrap_type.DEFAULT,
+        Bootstrap_type.CUSTOM,
+    ]
+}
+
+# ------------------------------- GERMAN DATASET INITIALIZATION ------------------------------- #
+def initialize_german_dataset():
+    ds = load_preproc_data_german(["sex"])
+    ds.labels = ds.labels % 2  # turns 2s into 0 while keeping 1s the same
+    ds.favorable_label = 1
+    ds.unfavorable_label = 0
+    return ds
+
+
 # ------------------------------- DATASET HYPERPARAMETERS ------------------------------- #
 DATASETS = {
     "german": {
@@ -24,12 +44,21 @@ DATASETS = {
         "sensitive_attribute": "sex",
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
-        "original_dataset": load_preproc_data_german(["sex"]),
-        "optim_options": {
-            "distortion_fun": get_distortion_german,
-            "epsilon": 0.1,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
+        "original_dataset": initialize_german_dataset(),
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_german,
+                    "epsilon": 0.1,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
     "adult": {
@@ -37,11 +66,20 @@ DATASETS = {
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_adult(["sex"]),
-        "optim_options": {
-            "distortion_fun": get_distortion_adult,
-            "epsilon": 0.05,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_adult,
+                    "epsilon": 0.05,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
     "compas": {
@@ -49,11 +87,20 @@ DATASETS = {
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_compas(["sex"]),
-        "optim_options": {
-            "distortion_fun": get_distortion_compas,
-            "epsilon": 0.05,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_compas,
+                    "epsilon": 0.05,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
 }
@@ -61,34 +108,28 @@ DATASETS = {
 # ------------------------------- CLASSIFIERS GRID ------------------------------- #
 CLASSIFIERS_HYPERPARAMETERS = {
     "Logistic Regression": {},
-    "Random Forest": {'max_depth': 10, 'n_estimators': 5, 'max_features': 2},
+    "Random Forest": {"max_depth": 10, "n_estimators": 5, "max_features": 2},
 }
 
 CLASSIFIERS = {
-    "Logistic Regression": LogisticRegression(**CLASSIFIERS_HYPERPARAMETERS['Logistic Regression']),
-    "Random Forest": RandomForestClassifier(**CLASSIFIERS_HYPERPARAMETERS['Random Forest']),
-}
-
-# ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
-DisparateImpactRemover_param_grid = [{'init': {'repair_level': 0.5}}]
-
-LFR_param_grid = [{'init': {"k": 5, "Ax": 0.01, "Ay": 1.0, "Az": 50.0},
-                  'transform': {"threshold": 0.5}}]
-
-FairBoost_param_grid = {
-    'bootstrap_type': [Bootstrap_type.NONE, Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]
+    "Logistic Regression": LogisticRegression(
+        **CLASSIFIERS_HYPERPARAMETERS["Logistic Regression"]
+    ),
+    "Random Forest": RandomForestClassifier(
+        **CLASSIFIERS_HYPERPARAMETERS["Random Forest"]
+    ),
 }
 
 
 # ------------------------------- TOP-LEVEL HYPERPARAMETER GRIDS ------------------------------- #
 HYPERPARAMETERS = {
     "Reweighing": [{}],
-    "DisparateImpactRemover": DisparateImpactRemover_param_grid,
+    "DisparateImpactRemover": [{}],
     "OptimPreproc": [{}],
-    "LFR": LFR_param_grid,
+    "LFR": [{}],
 }
 
 FAIRBOOST_HYPERPARAMETERS = {
-    'preprocessing': list(ParameterGrid(HYPERPARAMETERS)),
-    'init': list(ParameterGrid(FairBoost_param_grid))
+    "preprocessing": list(ParameterGrid(HYPERPARAMETERS)),
+    "init": list(ParameterGrid(FairBoost_param_grid)),
 }
