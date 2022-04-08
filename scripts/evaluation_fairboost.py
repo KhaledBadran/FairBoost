@@ -54,7 +54,7 @@ def train_test_bagging_baseline(
     a trained model
     """
     results = defaultdict(dict)
-    pp = [wrappers.NoPreprocessing() for _ in range(4)]
+    pp = [wrappers.NoPreprocessing() for _ in range(3)]
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nFairboost classifier name: {clf_name}")
         ens = FairBoost(clf, pp, **hyperparameters)
@@ -325,8 +325,8 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        # results = evaluate_baseline(
-        #     results, dataset, dataset_name, dataset_info)
+        results = evaluate_baseline(
+            results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Fairboost ----------")
         results = evaluate_fairboost(
