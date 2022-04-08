@@ -51,7 +51,7 @@ DATASETS = {
 
 # ------------------------------- CLASSIFIERS GRID ------------------------------- #
 CLASSIFIERS_HYPERPARAMETERS = {
-    "Logistic Regression": {},
+    "Logistic Regression": {'max_iter': 5000},
     "Random Forest": {"max_depth": 10, "n_estimators": 5, "max_features": 2},
 }
 
