@@ -132,8 +132,3 @@ HYPERPARAMETERS = {
     "OptimPreproc": [{}],
     "LFR": [{}],
 }
-
-FAIRBOOST_HYPERPARAMETERS = {
-    "preprocessing": list(ParameterGrid(HYPERPARAMETERS)),
-    "init": list(ParameterGrid(FairBoost_param_grid)),
-}

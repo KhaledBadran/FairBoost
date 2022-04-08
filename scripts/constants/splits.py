@@ -1,5 +1,6 @@
 # optim_option values is from https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
 
+from prometheus_client import Enum
 from aif360.algorithms.preprocessing.optim_preproc_helpers.distortion_functions import (
     get_distortion_adult,
     get_distortion_german,
@@ -17,15 +18,25 @@ from sklearn.model_selection import ParameterGrid
 from FairBoost.main import Bootstrap_type
 
 SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+
+class Preproc_name(str, Enum):
+    OptimPreproc = "OptimPreproc"
+    LFR = 'LFR'
+    DisparateImpactRemover = 'DisparateImpactRemover'
+    Reweighing = 'Reweighing'
+
+
 # ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
 DisparateImpactRemover_param_grid = [{"init": {"repair_level": 0.5}}]
 
 FairBoost_param_grid = {
-    "bootstrap_type": [
+    'init': {"bootstrap_type": [
         Bootstrap_type.NONE,
-        Bootstrap_type.DEFAULT,
-        Bootstrap_type.CUSTOM,
-    ]
+        # Bootstrap_type.DEFAULT,
+        # Bootstrap_type.CUSTOM,
+    ]},
+    'preprocessing': [[Preproc_name.DisparateImpactRemover]]
 }
 
 # ------------------------------- GERMAN DATASET INITIALIZATION ------------------------------- #
@@ -48,7 +59,7 @@ DATASETS = {
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": initialize_german_dataset(),
         "hyperparams": {
-            "OptimPreproc": [{
+            Preproc_name.OptimPreproc: [{
                 "optim_options": {
                     "distortion_fun": get_distortion_german,
                     "epsilon": 0.1,
@@ -56,11 +67,12 @@ DATASETS = {
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            "LFR": [{
+            Preproc_name.LFR: [{
                 "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
+            Preproc_name.DisparateImpactRemover: DisparateImpactRemover_param_grid,
+            Preproc_name.Reweighing: [{}]
         },
     },
     "adult": {
@@ -69,7 +81,7 @@ DATASETS = {
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_adult(["sex"]),
         "hyperparams": {
-            "OptimPreproc": [{
+            Preproc_name.OptimPreproc: [{
                 "optim_options": {
                     "distortion_fun": get_distortion_adult,
                     "epsilon": 0.05,
@@ -77,11 +89,12 @@ DATASETS = {
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            "LFR": [{
+            Preproc_name.LFR: [{
                 "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
+            Preproc_name.DisparateImpactRemover: DisparateImpactRemover_param_grid,
+            Preproc_name.Reweighing: [{}]
         },
     },
     "compas": {
@@ -90,7 +103,7 @@ DATASETS = {
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_compas(["sex"]),
         "hyperparams": {
-            "OptimPreproc": [{
+            Preproc_name.OptimPreproc: [{
                 "optim_options": {
                     "distortion_fun": get_distortion_compas,
                     "epsilon": 0.05,
@@ -98,11 +111,12 @@ DATASETS = {
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            "LFR": [{
+            Preproc_name.LFR: [{
                 "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
+            Preproc_name.DisparateImpactRemover: DisparateImpactRemover_param_grid,
+            Preproc_name.Reweighing: [{}]
         },
     },
 }
@@ -129,9 +143,4 @@ HYPERPARAMETERS = {
     "DisparateImpactRemover": [{}],
     "OptimPreproc": [{}],
     "LFR": [{}],
-}
-
-FAIRBOOST_HYPERPARAMETERS = {
-    "preprocessing": list(ParameterGrid(HYPERPARAMETERS)),
-    "init": list(ParameterGrid(FairBoost_param_grid)),
 }

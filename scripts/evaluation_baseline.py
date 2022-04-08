@@ -405,7 +405,6 @@ def main():
     experiment_details = {
         "DATE": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "CLASSIFIERS_HYPERPARAMETERS": CLASSIFIERS_HYPERPARAMETERS,
-        "HYPERPARAMETERS": HYPERPARAMETERS,
         "SEEDS": SEEDS,
     }
 
