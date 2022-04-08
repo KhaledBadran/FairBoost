@@ -2,6 +2,8 @@
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_meta_classifier.ipynb
 # https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
+from distutils.command.sdist import sdist
+import json
 from textwrap import wrap
 from unittest import result
 import numpy as np
@@ -29,10 +31,11 @@ from typing import Dict
 from constants.splits import (
     DATASETS,
     CLASSIFIERS,
-    FAIRBOOST_HYPERPARAMETERS,
+    HYPERPARAMETERS,
     FairBoost_param_grid,
     SEEDS,
     CLASSIFIERS_HYPERPARAMETERS,
+    Preproc_name,
 )
 from FairBoost.main import FairBoost, Bootstrap_type
 from FairBoost import wrappers
@@ -116,7 +119,8 @@ def init_OptimPreproc(dataset_info: Dict, hyperparameters={}) -> wrappers.Prepro
     :param hyperparameters: hyperparameters to initialize the OptimPreproc algorithm
     :return: The OptimPreproc preprocessing function to be used by Fairboost.
     """
-    OP = OptimPreproc(OptTools, dataset_info["optim_options"], verbose=False)
+    OP = OptimPreproc(
+        OptTools, hyperparameters["optim_options"], verbose=False)
     return wrappers.OptimPreproc(OP)
 
 
@@ -132,13 +136,38 @@ def init_LFR(dataset_info: Dict, hyperparameters={}) -> wrappers.Preprocessing:
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=dataset_info['LFR_params']["init"]["k"],
-        Ax=dataset_info['LFR_params']["init"]["Ax"],
-        Ay=dataset_info['LFR_params']["init"]["Ay"],
-        Az=dataset_info['LFR_params']["init"]["Az"],
-        verbose=0,  # Default parameters
+        k=hyperparameters["init"]["k"],
+        Ax=hyperparameters["init"]["Ax"],
+        Ay=hyperparameters["init"]["Ay"],
+        Az=hyperparameters["init"]["Az"],
+        verbose=0,
     )
-    return wrappers.LFR(LFR_transformer, transform_params=dataset_info['LFR_params']["transform"])
+    return wrappers.LFR(LFR_transformer, transform_params=hyperparameters["transform"])
+
+
+@typechecked
+def init_preprocessing_functions(hyperparameters: Dict, dataset_info: Dict):
+    """
+    Initializes the preprocessing functions for Fairboost given the 
+    desired preprocessing functions and their hyperparameters.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param hyperparameters: hyperparameters to initialize the preprocessing functions of fairboost
+    :return: a dictionary of accuracy and fairness metrics
+    """
+    res = []
+    for preproc_name, hyperparameter in hyperparameters.items():
+        if preproc_name == Preproc_name.Reweighing:
+            res.append(init_reweighting(dataset_info, hyperparameter))
+        elif preproc_name == Preproc_name.LFR:
+            res.append(init_LFR(dataset_info, hyperparameter))
+        elif preproc_name == Preproc_name.DisparateImpactRemover:
+            res.append(init_DIR(dataset_info, hyperparameter))
+        elif preproc_name == Preproc_name.OptimPreproc:
+            res.append(init_OptimPreproc(dataset_info, hyperparameter))
+        else:
+            raise Exception('Could not initialize preprocessing algo')
+    return res
 
 
 @typechecked
@@ -159,15 +188,8 @@ def train_test_fairboost(
     :return: a dictionary of accuracy and fairness metrics
     """
     results = defaultdict(dict)
-    RW = init_reweighting(dataset_info, hyperparameters["preprocessing"]["Reweighing"])
-    DIR = init_DIR(
-        dataset_info, hyperparameters["preprocessing"]["DisparateImpactRemover"]
-    )
-    OP = init_OptimPreproc(
-        dataset_info, hyperparameters["preprocessing"]["OptimPreproc"]
-    )
-    LFR_transformer = init_LFR(dataset_info, hyperparameters["preprocessing"]["LFR"])
-    pp = [RW, DIR, OP, LFR_transformer]
+    pp = init_preprocessing_functions(
+        hyperparameters["preprocessing"], dataset_info)
 
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nFairboost classifier name: {clf_name}")
@@ -210,24 +232,52 @@ def evaluate_baseline(
     results[dataset_name]["baseline"] = []
 
     # Measuring Fairboost performances for different hyperparameter configurations (without unfairness mitigation techniques)
-    for hyperparameters in ParameterGrid(FairBoost_param_grid):
+    for hyperparameters in ParameterGrid(FairBoost_param_grid['init']):
         results[dataset_name]["baseline"].append(
             {"hyperparameters": hyperparameters, "results": []}
         )
         # Splitting dataset over different seeds
         for seed in SEEDS:
-            train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
+            train_split, test_split = dataset.split(
+                [0.7], shuffle=True, seed=seed)
             # Measuring model performance
             performance_metrics = train_test_bagging_baseline(
                 train_split, test_split, dataset_info, hyperparameters
             )
-            results[dataset_name]["baseline"][-1]["results"].append(performance_metrics)
+            results[dataset_name]["baseline"][-1]["results"].append(
+                performance_metrics)
 
         # Merging results for clarity
         results[dataset_name]["baseline"][-1]["results"] = merge_results_array(
             results[dataset_name]["baseline"][-1]["results"]
         )
     return results
+
+
+@typechecked
+def get_fairboost_param_grid(dataset_info: Dict) -> list:
+    """
+    Generates fairboost hyperparam search grid.
+
+    :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :return: The search grid
+    """
+    # Per-dataset hyperparameters overwrite general hyperparameters
+    preprocessing_hyperparams = {
+        **HYPERPARAMETERS, **dataset_info['hyperparams']}
+
+    # Fetches the hyperparams per preprocessing algo
+    preprocessing = []
+    for preproc_combination in FairBoost_param_grid['preprocessing']:
+        p_hyp = {key: preprocessing_hyperparams[key]
+                 for key in preproc_combination}
+        preprocessing = [*preprocessing, *list(ParameterGrid(p_hyp))]
+
+    hyperparam_config = {
+        "preprocessing": preprocessing,
+        "init": list(ParameterGrid(FairBoost_param_grid['init'])),
+    }
+    return list(ParameterGrid(hyperparam_config))
 
 
 @typechecked
@@ -248,10 +298,12 @@ def evaluate_fairboost(
     :return: The updated results dictionnary
     """
     results[dataset_name]["fairboost"] = []
-    n_combinations = len(list(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)))
+
+    fairboost_hyperparameter_grid = get_fairboost_param_grid(dataset_info)
+    n_combinations = len(fairboost_hyperparameter_grid)
 
     # Measuring Fairboost performances for different hyperparameter configurations
-    for i, hyperparameters in enumerate(ParameterGrid(FAIRBOOST_HYPERPARAMETERS)):
+    for i, hyperparameters in enumerate(fairboost_hyperparameter_grid):
         print(f"\n---------- Progress: {i}/{n_combinations} ----------")
         results[dataset_name]["fairboost"].append(
             {"hyperparameters": hyperparameters, "results": []}
@@ -259,7 +311,8 @@ def evaluate_fairboost(
 
         # Splitting dataset over different seeds
         for seed in SEEDS:
-            train_split, test_split = dataset.split([0.7], shuffle=True, seed=seed)
+            train_split, test_split = dataset.split(
+                [0.7], shuffle=True, seed=seed)
             # Measuring model performance
             performance_metrics = train_test_fairboost(
                 train_split, test_split, dataset_info, hyperparameters
@@ -285,16 +338,17 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        results = evaluate_baseline(results, dataset, dataset_name, dataset_info)
+        # results = evaluate_baseline(
+        #     results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Fairboost ----------")
-        results = evaluate_fairboost(results, dataset, dataset_name, dataset_info)
+        results = evaluate_fairboost(
+            results, dataset, dataset_name, dataset_info)
 
     # save the results to file
     experiment_details = {
         "DATE": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "CLASSIFIERS_HYPERPARAMETERS": CLASSIFIERS_HYPERPARAMETERS,
-        "FAIRBOOST_HYPERPARAMETERS": FAIRBOOST_HYPERPARAMETERS,
         "SEEDS": SEEDS,
     }
 

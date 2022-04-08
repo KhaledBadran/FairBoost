@@ -20,12 +20,13 @@ def save_results(filename: str, results: Dict, experiment_details: Dict = {}):
     :param results: The results to be saved
     """
 
-    experiment_results = {"experiment_details": experiment_details, "results": results}
+    experiment_results = {
+        "experiment_details": experiment_details, "results": results}
     dir_path = os.path.dirname(os.path.realpath(__file__))
     results_dir = Path(dir_path, "results")
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(f"{results_dir}/{filename}.json", "w") as fp:
-        json.dump(experiment_results, fp, indent=4)
+        json.dump(experiment_results, fp, indent=4, cls=FunctionEncoder)
 
 
 @typechecked
@@ -74,3 +75,10 @@ def merge_results_array(results):
                     result[algo_type][metric_name]
                 )
     return metrics_agg
+
+
+class FunctionEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if callable(obj):
+            return obj.__name__
+        return json.JSONEncoder.default(self, obj)
