@@ -68,7 +68,7 @@ def train_test_models(
 
     # Train models
     X_train, y_train = train_dataset.features, train_dataset.labels.ravel()
-    X_test, y_test = test_dataset.features, test_dataset.labels.ravel()
+    X_test = test_dataset.features
 
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nevaluating classifier {clf_name}")
@@ -136,7 +136,7 @@ def apply_DIR(
     """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
-        repair_level=dataset_info["hyperparams"]["DisparateImpactRemover"]["init"]["repair_level"],
+        repair_level=hyperparameters["init"]["repair_level"],
     )
 
     train_dataset_DIR = DIR.fit_transform(train_dataset)
@@ -150,6 +150,7 @@ def apply_OptimPreproc(
     train_dataset: BinaryLabelDataset,
     test_dataset: BinaryLabelDataset,
     dataset_info: Dict,
+    hyperparameters: Dict,
 ) -> Tuple[BinaryLabelDataset, BinaryLabelDataset]:
     """
     :param train_dataset: an AIF360 dataset containing the training examples with their labels
@@ -157,9 +158,11 @@ def apply_OptimPreproc(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via the Optimized Preprocessing technique
     """
-    train_dataset_OP, test_dataset_OP = train_dataset.copy(deepcopy=True), test_dataset.copy(deepcopy=True)
+    train_dataset_OP, test_dataset_OP = train_dataset.copy(
+        deepcopy=True), test_dataset.copy(deepcopy=True)
 
-    OP = OptimPreproc(OptTools, dataset_info["hyperparams"]["OptimPreproc"]["optim_options"], verbose=False)
+    OP = OptimPreproc(
+        OptTools, hyperparameters["optim_options"], verbose=False)
 
     OP = OP.fit(train_dataset)
 
@@ -196,10 +199,10 @@ def apply_LFR(
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=dataset_info["hyperparams"]["LFR"]["init"]["k"],
-        Ax=dataset_info["hyperparams"]["LFR"]["init"]["Ax"],
-        Ay=dataset_info["hyperparams"]["LFR"]["init"]["Ay"],
-        Az=dataset_info["hyperparams"]["LFR"]["init"]["Az"],
+        k=hyperparameters["init"]["k"],
+        Ax=hyperparameters["init"]["Ax"],
+        Ay=hyperparameters["init"]["Ay"],
+        Az=hyperparameters["init"]["Az"],
         verbose=0,  # Default parameters
     )
 
@@ -208,10 +211,10 @@ def apply_LFR(
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
-        train_dataset, threshold=dataset_info["hyperparams"]["LFR"]["transform"]["threshold"]
+        train_dataset, threshold=hyperparameters["transform"]["threshold"]
     )
     test_dataset_LFR = LFR_transformer.transform(
-        test_dataset, threshold=dataset_info["hyperparams"]["LFR"]["transform"]["threshold"]
+        test_dataset, threshold=hyperparameters["transform"]["threshold"]
     )
 
     return train_dataset_LFR, test_dataset_LFR
@@ -235,7 +238,8 @@ def apply_preprocessing_algo(
     """
 
     # just an initialization
-    train_dataset_transformed, test_dataset_transformed = train_dataset.copy(deepcopy=True), test_dataset.copy(deepcopy=True)
+    train_dataset_transformed, test_dataset_transformed = train_dataset.copy(
+        deepcopy=True), test_dataset.copy(deepcopy=True)
 
     try:
         if algo_name == "Reweighing":
@@ -249,7 +253,7 @@ def apply_preprocessing_algo(
 
         elif algo_name == "OptimPreproc":
             train_dataset_transformed, test_dataset_transformed = apply_OptimPreproc(
-                train_dataset, test_dataset, dataset_info
+                train_dataset, test_dataset, dataset_info, hyperparameters
             )
 
         elif algo_name == "LFR":
@@ -331,10 +335,12 @@ def evaluate_mitigation_techniques(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: The updated results dictionnary
     """
+    # Per-dataset hyperparameters overwrite general hyperparameters
+    m_hyperparameters = {**HYPERPARAMETERS, **dataset_info['hyperparams']}
     for (
         debaiasing_algo_name,
         hyperparameters_space,
-    ) in HYPERPARAMETERS.items():
+    ) in m_hyperparameters.items():
         print(f"\n\n####After applying {debaiasing_algo_name}######\n")
 
         results[dataset_name][debaiasing_algo_name] = []
