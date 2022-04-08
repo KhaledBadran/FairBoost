@@ -17,6 +17,9 @@ from sklearn.model_selection import ParameterGrid
 from FairBoost.main import Bootstrap_type
 
 
+# ------------------------------- HYPERPARAMETER GRIDS ------------------------------- #
+DisparateImpactRemover_param_grid = [{"init": {"repair_level": 0.5}}]
+
 # ------------------------------- GERMAN DATASET INITIALIZATION ------------------------------- #
 def initialize_german_dataset():
     ds = load_preproc_data_german(["sex"])
@@ -34,15 +37,20 @@ DATASETS = {
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": initialize_german_dataset(),
-        "optim_options": {
-            "distortion_fun": get_distortion_german,
-            "epsilon": 0.1,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
-        },
-        "LFR_params": {
-            "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
-            "transform": {"threshold": 0.5},
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_german,
+                    "epsilon": 0.1,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
     "adult": {
@@ -50,15 +58,20 @@ DATASETS = {
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_adult(["sex"]),
-        "optim_options": {
-            "distortion_fun": get_distortion_adult,
-            "epsilon": 0.05,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
-        },
-        "LFR_params": {
-            "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
-            "transform": {"threshold": 0.5},
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_adult,
+                    "epsilon": 0.05,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
     "compas": {
@@ -66,15 +79,20 @@ DATASETS = {
         "privileged_groups": [{"sex": 1}],
         "unprivileged_groups": [{"sex": 0}],
         "original_dataset": load_preproc_data_compas(["sex"]),
-        "optim_options": {
-            "distortion_fun": get_distortion_compas,
-            "epsilon": 0.05,
-            "clist": [0.99, 1.99, 2.99],
-            "dlist": [0.1, 0.05, 0],
-        },
-        "LFR_params": {
-            "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
-            "transform": {"threshold": 0.5},
+        "hyperparams": {
+            "OptimPreproc": {
+                "optim_options": {
+                    "distortion_fun": get_distortion_compas,
+                    "epsilon": 0.05,
+                    "clist": [0.99, 1.99, 2.99],
+                    "dlist": [0.1, 0.05, 0],
+                },
+            },
+            "LFR": {
+                "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
+                "transform": {"threshold": 0.5},
+            },
+            "DisparateImpactRemover": DisparateImpactRemover_param_grid,
         },
     },
 }
@@ -108,7 +126,7 @@ FairBoost_param_grid = {
 # ------------------------------- TOP-LEVEL HYPERPARAMETER GRIDS ------------------------------- #
 HYPERPARAMETERS = {
     "Reweighing": [{}],
-    "DisparateImpactRemover": DisparateImpactRemover_param_grid,
+    "DisparateImpactRemover": [{}],
     "OptimPreproc": [{}],
     "LFR": [{}],
 }

@@ -136,7 +136,7 @@ def apply_DIR(
     """
     DIR = DisparateImpactRemover(
         sensitive_attribute=dataset_info["sensitive_attribute"],
-        repair_level=hyperparameters["init"]["repair_level"],
+        repair_level=dataset_info["hyperparams"]["DisparateImpactRemover"]["init"]["repair_level"],
     )
 
     train_dataset_DIR = DIR.fit_transform(train_dataset)
@@ -159,7 +159,7 @@ def apply_OptimPreproc(
     """
     train_dataset_OP, test_dataset_OP = train_dataset.copy(deepcopy=True), test_dataset.copy(deepcopy=True)
 
-    OP = OptimPreproc(OptTools, dataset_info["optim_options"], verbose=False)
+    OP = OptimPreproc(OptTools, dataset_info["hyperparams"]["OptimPreproc"]["optim_options"], verbose=False)
 
     OP = OP.fit(train_dataset)
 
@@ -196,10 +196,10 @@ def apply_LFR(
     LFR_transformer = LFR(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
-        k=dataset_info['LFR_params']["init"]["k"],
-        Ax=dataset_info['LFR_params']["init"]["Ax"],
-        Ay=dataset_info['LFR_params']["init"]["Ay"],
-        Az=dataset_info['LFR_params']["init"]["Az"],
+        k=dataset_info["hyperparams"]["LFR"]["init"]["k"],
+        Ax=dataset_info["hyperparams"]["LFR"]["init"]["Ax"],
+        Ay=dataset_info["hyperparams"]["LFR"]["init"]["Ay"],
+        Az=dataset_info["hyperparams"]["LFR"]["init"]["Az"],
         verbose=0,  # Default parameters
     )
 
@@ -207,10 +207,10 @@ def apply_LFR(
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
-        train_dataset, threshold=dataset_info['LFR_params']["transform"]["threshold"]
+        train_dataset, threshold=dataset_info["hyperparams"]["LFR"]["transform"]["threshold"]
     )
     test_dataset_LFR = LFR_transformer.transform(
-        test_dataset, threshold=dataset_info['LFR_params']["transform"]["threshold"]
+        test_dataset, threshold=dataset_info["hyperparams"]["LFR"]["transform"]["threshold"]
     )
 
     return train_dataset_LFR, test_dataset_LFR
