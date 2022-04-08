@@ -62,7 +62,7 @@ def read_data_fairboost(path):
 
 
 @typechecked
-def generate_data(data: Dict, dataset_name="", classifier_name=""):
+def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
     """
     Generates a DataFrame object, necessary for the plotting.
             Parameters:
@@ -85,7 +85,6 @@ def generate_data(data: Dict, dataset_name="", classifier_name=""):
             x2.append(mean_accuracy + (std_accuracy / 2))
             y1.append(mean_fairness - (std_fairness / 2))
             y2.append(mean_fairness + (std_fairness / 2))
-            # t.append(key.split("-")[1])
             t.append(key)
     d = pd.DataFrame({"x1": x1, "x2": x2, "y1": y1, "y2": y2, "t": t, "r": t})
     return d
@@ -100,7 +99,7 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
             Returns:
                     g (ggplot): returns the plot
     """
-    dataframe = generate_data(data, dataset_name=dataset_name, classifier_name=classifier_name)
+    dataframe = to_dataframe(data, dataset_name=dataset_name, classifier_name=classifier_name)
     plot_title = "Stability of the accuracy and fairness of \n" + \
                  classifier_name + " trained on " + dataset_name + " dataset"
 
@@ -121,16 +120,19 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
     g.save(plots_path+dataset_name+"-"+classifier_name+".png")
     return g
 
+def main():
+    data = read_data_baseline("json_files/baseline_splits.json")
+    plots_path = "plots/baseline/"
 
-data = read_data_baseline("json_files/baseline_splits.json")
-plots_path = "plots/baseline/"
-
-# data = read_data_fairboost("json_files/fairboost_splits.json")
-# plots_path = "plots/fairboost/"
+    # data = read_data_fairboost("json_files/fairboost_splits.json")
+    # plots_path = "plots/fairboost/"
 
 
-datasets = ["german", "adult", "compas"]
-classifiers = ["Logistic Regression", "Random Forest"]
-for dataset in datasets:
-    for classifier in classifiers:
-        rectangular_plot(data,plots_path = plots_path, dataset_name=dataset, classifier_name=classifier)
+    datasets = ["german", "adult", "compas"]
+    classifiers = ["Logistic Regression", "Random Forest"]
+    for dataset in datasets:
+        for classifier in classifiers:
+            rectangular_plot(data,plots_path = plots_path, dataset_name=dataset, classifier_name=classifier)
+
+if __name__ == '__main__':
+    main()
