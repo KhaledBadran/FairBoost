@@ -1,5 +1,5 @@
 # optim_option values is from https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
-from typing import Dict
+from typing import Dict, List
 from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions import (
     load_preproc_data_adult,
     load_preproc_data_german,
@@ -17,7 +17,7 @@ from .enums import Preproc_name, Dataset_name
 
 
 @typechecked
-def initialize_german_dataset(protected_attributes=["sex"]) -> BinaryLabelDataset:
+def initialize_german_dataset(protected_attributes: List = ["sex"]) -> BinaryLabelDataset:
     """
     Initializes the german dataset
 
@@ -32,7 +32,7 @@ def initialize_german_dataset(protected_attributes=["sex"]) -> BinaryLabelDatase
 
 
 @typechecked
-def initialize_adult_dataset(protected_attributes=["sex"]) -> BinaryLabelDataset:
+def initialize_adult_dataset(protected_attributes: List = ["sex"]) -> BinaryLabelDataset:
     """
     Initializes the adult dataset
 
@@ -43,7 +43,7 @@ def initialize_adult_dataset(protected_attributes=["sex"]) -> BinaryLabelDataset
 
 
 @typechecked
-def initialize_compass_dataset(protected_attributes=["sex"]) -> BinaryLabelDataset:
+def initialize_compass_dataset(protected_attributes: List = ["sex"]) -> BinaryLabelDataset:
     """
     Initializes the compass dataset
 
@@ -62,7 +62,6 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
     :param dataset_name: The name of the dataset 
     :return: The hyperparameters of every preprocessing function
     """
-    DIR_param_grid = [{"init": {"repair_level": 0.5}}]
     if dataset_name == Dataset_name.GERMAN:
         return {
             Preproc_name.OptimPreproc: [{
@@ -77,7 +76,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                 "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            Preproc_name.DisparateImpactRemover: DIR_param_grid,
+            Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
     elif dataset_name == Dataset_name.ADULT:
@@ -94,7 +93,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                 "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            Preproc_name.DisparateImpactRemover: DIR_param_grid,
+            Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
     elif dataset_name == Dataset_name.COMPASS:
@@ -111,7 +110,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                 "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
                 "transform": {"threshold": 0.5},
             }],
-            Preproc_name.DisparateImpactRemover: DIR_param_grid,
+            Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
     else:
