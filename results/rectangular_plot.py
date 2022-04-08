@@ -12,6 +12,13 @@ from typeguard import typechecked
 
 
 def read_data_baseline(path):
+    """
+    Generates a dict object representing the data in the baseline_splits.json.
+            Parameters:
+                    path : path of the file baseline_splits.json
+            Returns:
+                    dict (Dict): a preprocessed dict representing the data
+    """
     dict = {}
     with open(path, 'r') as f:
         results = json.load(f)
@@ -29,6 +36,13 @@ def read_data_baseline(path):
 
 
 def read_data_fairboost(path):
+    """
+    Generates a dict object representing the data in the fairboost_splits.json.
+            Parameters:
+                    path : path of the file fairboost_splits.json
+            Returns:
+                    dict (Dict): a preprocessed dict representing the data
+    """
     dict = {}
     with open(path, 'r') as f:
         results = json.load(f)
