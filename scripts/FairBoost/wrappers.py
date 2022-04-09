@@ -45,13 +45,13 @@ class DIR(Preprocessing):
 
 class OptimPreproc(Preprocessing):
     def fit_transform(self, dataset):
-        d = self.preprocessing.fit_transform(dataset, **self.transform_params)
+        d = self.preprocessing.fit_transform(dataset, **self.transform_params, transform_Y=True)
         # OptimPreproc needs to align data sets after transform
         d = dataset.align_datasets(d)
         return d.features, d.labels, d.instance_weights
 
     def transform(self, dataset):
-        d = self.preprocessing.transform(dataset, **self.transform_params)
+        d = self.preprocessing.transform(dataset, **self.transform_params, transform_Y=True)
         # OptimPreproc needs to align data sets after transform
         d = dataset.align_datasets(d)
         return d.features, d.labels, d.instance_weights

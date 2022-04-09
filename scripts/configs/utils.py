@@ -28,6 +28,11 @@ def initialize_german_dataset(protected_attributes: List = ["sex"]) -> BinaryLab
     ds.labels = ds.labels % 2  # turns 2s into 0 while keeping 1s the same
     ds.favorable_label = 1
     ds.unfavorable_label = 0
+
+    # set the correct labels because the labels changed and its important for Optimized Preprocessing Distortion
+    ds.label_map = {1.0: 'Good Credit', 0.0: 'Bad Credit'}
+    ds.metadata['label_maps'] = [{1.0: 'Good Credit', 0.0: 'Bad Credit'}]
+
     return ds
 
 
@@ -55,7 +60,11 @@ def initialize_compass_dataset(protected_attributes: List = ["sex"]) -> BinaryLa
     ds.labels = 1 - ds.labels  # turns 1s into 0s and 0s to 1s
     ds.favorable_label = 1
     ds.unfavorable_label = 0
+
+    # set the correct labels because the labels changed and its important for Optimized Preprocessing Distortion
     ds.label_map = {0.0: 'Did recid.', 1.0: 'No recid.'}
+    ds.metadata['label_maps'] = [{0.0: 'Did recid.', 1.0: 'No recid.'}]
+
     return ds
 
 
