@@ -12,7 +12,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.distortion_functions 
     get_distortion_compas,
 )
 from typeguard import typechecked
-
+from sklearn.model_selection import ParameterGrid
 from .enums import Preproc_name, Dataset_name
 
 
@@ -112,6 +112,41 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
             }],
             Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
+        }
+    else:
+        raise Exception('Error in dataset hyperparameter initialization')
+
+
+@typechecked
+def get_LFR_hyperparameters_search(dataset_name: Dataset_name):
+    """
+    Returns the different hyperparameters we searched for each dataset,
+    for each unfairness mitigation technique.
+    It must replace "get_preproc_hyperparameters" in constant file to be used. 
+
+    :param dataset_name: The name of the dataset 
+    :return: The hyperparameters of every preprocessing function
+    """
+    if dataset_name == Dataset_name.GERMAN:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
+        }
+    elif dataset_name == Dataset_name.ADULT:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
+        }
+    elif dataset_name == Dataset_name.COMPASS:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
         }
     else:
         raise Exception('Error in dataset hyperparameter initialization')
