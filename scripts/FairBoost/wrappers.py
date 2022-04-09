@@ -24,14 +24,17 @@ class Preprocessing:
 class NoPreprocessing(Preprocessing):
     def __init__(self):
         super().__init__(preprocessing=None)
+        self.scaler = StandardScaler()
 
     def __str__(self) -> str:
         return f'NoPreprocessing'
 
     def fit_transform(self, dataset):
+        dataset.features = self.scaler.fit_transform(dataset.features)
         return dataset.features, dataset.labels, dataset.instance_weights
 
     def transform(self, dataset):
+        dataset.features = self.scaler.transform(dataset.features)
         return dataset.features, dataset.labels, dataset.instance_weights
 
 
