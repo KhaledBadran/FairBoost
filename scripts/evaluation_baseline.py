@@ -336,6 +336,7 @@ def evaluate_mitigation_techniques(
             for seed in SEEDS:
                 train_split, test_split = dataset.split(
                     [0.7], shuffle=True, seed=seed)
+                test_split.unprocessed_features = test_split.features
                 # Transforming datasets with unfairness mitigation technique
                 (
                     train_split_transformed,
@@ -347,7 +348,6 @@ def evaluate_mitigation_techniques(
                     test_split.copy(deepcopy=True),
                     dataset_info,
                 )
-                test_split_transformed.unprocessed_features = test_split.features
                 # Measuring model performance
                 performance_metrics = train_test_models(
                     train_split_transformed,
