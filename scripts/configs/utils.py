@@ -50,7 +50,13 @@ def initialize_compass_dataset(protected_attributes: List = ["sex"]) -> BinaryLa
     :param protected_attributes: The protected attributes of the dataset
     :return: The compass dataset
     """
-    return load_preproc_data_compas(protected_attributes)
+
+    ds = load_preproc_data_compas(protected_attributes)
+    ds.labels = 1 - ds.labels  # turns 1s into 0s and 0s to 1s
+    ds.favorable_label = 1
+    ds.unfavorable_label = 0
+    ds.label_map = {0.0: 'Did recid.', 1.0: 'No recid.'}
+    return ds
 
 
 @typechecked
