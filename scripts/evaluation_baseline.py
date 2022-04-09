@@ -64,7 +64,6 @@ def train_test_models(
             y_pred = clf.predict(X_test)
 
             # Measuring metrics
-            test_dataset.features = test_dataset.unprocessed_features
             classified_dataset = test_dataset.copy()
             classified_dataset.labels = y_pred
             results[clf_name] = measure_results(
@@ -288,7 +287,6 @@ def evaluate_baseline(
         scaler = StandardScaler()
         scaler = scaler.fit(train_dataset.features)
         train_dataset.features = scaler.transform(train_dataset.features)
-        test_dataset.unprocessed_features = test_dataset.features
         test_dataset.features = scaler.transform(test_dataset.features)
 
         # Measuring model performance
