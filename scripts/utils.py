@@ -38,25 +38,25 @@ def get_manual_DI(dataset: BinaryLabelDataset) -> float:
     # What is the value of the protected attribute that is the protected group (0 or 1)
     value_protected = dataset.unprivileged_protected_attributes[0]
     # The value of the protected attribute for each instance
-    instance_protected_values = dataset.protected_attributes
+    instance_protected_values = dataset.protected_attributes.ravel()
     y_pred = dataset.labels
 
     y_protected = y_pred[instance_protected_values == value_protected]
     y_unprotected = y_pred[instance_protected_values != value_protected]
 
-    ratio_unprotected = y_unprotected[y_unprotected ==
-                                      dataset.favorable_label].sum() / len(y_unprotected)
-    ratio_protected = y_protected[y_protected ==
-                                  dataset.favorable_label].sum() / len(y_protected)
+    ratio_unprotected = len(y_unprotected[y_unprotected ==
+                                          dataset.favorable_label]) / len(y_unprotected)
+    ratio_protected = len(y_protected[y_protected ==
+                                      dataset.favorable_label]) / len(y_protected)
 
-    return ratio_protected/ratio_unprotected
+    return ratio_protected / ratio_unprotected
 
 
 @typechecked
 def measure_results(
-    test_dataset: BinaryLabelDataset,
-    classified_dataset: BinaryLabelDataset,
-    dataset_info: Dict,
+        test_dataset: BinaryLabelDataset,
+        classified_dataset: BinaryLabelDataset,
+        dataset_info: Dict,
 ) -> Dict:
     """
     Computes fairness and accuracy metrics.
@@ -72,13 +72,14 @@ def measure_results(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
     )
+
     classification_metric_bin = BinaryLabelDatasetMetric(
-        dataset=test_dataset,
+        dataset=classified_dataset,
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
     )
 
-    m_disparate_impact = get_manual_DI(test_dataset)
+    m_disparate_impact = get_manual_DI(classified_dataset)
     # calculate metrics
     accuracy = accuracy_score(test_dataset.labels, classified_dataset.labels)
     f1 = f1_score(test_dataset.labels, classified_dataset.labels)
