@@ -86,11 +86,11 @@ def measure_results(
     disparate_impact = classification_metric_bin.disparate_impact()
     average_odds_difference = classification_metric.average_odds_difference()
 
-    print(f"accuracy {accuracy}")
-    print(f"f1-score {f1}")
-    print(f"disparate_impact {disparate_impact}")
-    print(f"Manual disparate impact {m_disparate_impact}")
-    print(f"average odds difference {average_odds_difference}")
+    # print(f"accuracy {accuracy}")
+    # print(f"f1-score {f1}")
+    # print(f"disparate_impact {disparate_impact}")
+    # print(f"Manual disparate impact {m_disparate_impact}")
+    # print(f"average odds difference {average_odds_difference}")
 
     return {
         "accuracy": accuracy,

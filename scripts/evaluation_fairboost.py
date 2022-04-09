@@ -56,7 +56,7 @@ def train_test_bagging_baseline(
     results = defaultdict(dict)
     pp = [wrappers.NoPreprocessing() for _ in range(3)]
     for clf_name, clf in CLASSIFIERS.items():
-        print(f"\nFairboost classifier name: {clf_name}")
+        # print(f"\nFairboost classifier name: {clf_name}")
         ens = FairBoost(clf, pp, **hyperparameters)
         ens = ens.fit(train_dataset)
         y_pred = ens.predict(test_dataset)
@@ -183,7 +183,7 @@ def train_test_fairboost(
         hyperparameters["preprocessing"], dataset_info)
 
     for clf_name, clf in CLASSIFIERS.items():
-        print(f"\nFairboost classifier name: {clf_name}")
+        # print(f"\nFairboost classifier name: {clf_name}")
         try:
             # Training + prediction
             ens = FairBoost(clf, pp, **hyperparameters["init"])
