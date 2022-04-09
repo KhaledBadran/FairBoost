@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 import json
 from aif360.datasets import BinaryLabelDataset
-from aif360.metrics import ClassificationMetric
+from aif360.metrics import ClassificationMetric, BinaryLabelDatasetMetric
 from typing import Dict
 from sklearn.metrics import accuracy_score
 
@@ -49,10 +49,15 @@ def measure_results(
         unprivileged_groups=dataset_info["unprivileged_groups"],
         privileged_groups=dataset_info["privileged_groups"],
     )
+    classification_metric_bin = BinaryLabelDatasetMetric(
+        dataset=test_dataset,
+        unprivileged_groups=dataset_info["unprivileged_groups"],
+        privileged_groups=dataset_info["privileged_groups"],
+    )
 
     # calculate metrics
     accuracy = accuracy_score(test_dataset.labels, classified_dataset.labels)
-    disparate_impact = classification_metric.disparate_impact()
+    disparate_impact = classification_metric_bin.disparate_impact()
     average_odds_difference = classification_metric.average_odds_difference()
 
     print(f"accuracy {accuracy}")
