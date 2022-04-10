@@ -103,7 +103,7 @@ def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
 
 
 @typechecked
-def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""):
+def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name="", print_figures=False):
     """
     Plots the rectangles plots.
             Parameters:
@@ -129,14 +129,14 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
          + pn.labs(title=plot_title, fill='Preprocessing')
          + pn.theme(legend_margin=-10, legend_box_spacing=0)
          )
-    print(g)
+    if print_figures:
+        print(g)
     g.save(plots_path + dataset_name + "-" + classifier_name + ".png")
     return g
 
 
 def main():
     data_baseline = read_data_baseline("json_files/baseline_splits.json")
-
     data_fairboost = read_data_fairboost("json_files/fairboost_splits.json")
 
     data = Merge(data_baseline, data_fairboost)
@@ -147,7 +147,7 @@ def main():
     for dataset in datasets:
         for classifier in classifiers:
             rectangular_plot(data, plots_path=plots_path,
-                             dataset_name=dataset, classifier_name=classifier)
+                             dataset_name=dataset, classifier_name=classifier, print_figures=False)
 
 
 if __name__ == '__main__':
