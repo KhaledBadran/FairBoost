@@ -1,14 +1,11 @@
 import json
-import statistics
 from typing import List, Dict
 
 import pandas as pd
 import numpy as np
-from caffe2.perfkernels.hp_emblookup_codegen import opts
-from pandas.api.types import CategoricalDtype
-from plotnine import *
-from plotnine.data import mpg
+import plotnine as pn
 from typeguard import typechecked
+
 
 def Merge(dict1, dict2):
     """
@@ -21,6 +18,7 @@ def Merge(dict1, dict2):
     """
     res = {**dict1, **dict2}
     return res
+
 
 def read_data_baseline(path):
     """
@@ -44,6 +42,7 @@ def read_data_baseline(path):
                     key = dataset_key + "-" + preprocessing_key + "-" + classifier_key
                     dict[key] = classifier_value
     return dict
+
 
 def read_data_fairboost(path):
     """
@@ -112,22 +111,23 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
             Returns:
                     g (ggplot): returns the plot
     """
-    dataframe = to_dataframe(data, dataset_name=dataset_name, classifier_name=classifier_name)
+    dataframe = to_dataframe(
+        data, dataset_name=dataset_name, classifier_name=classifier_name)
     plot_title = "Stability of the accuracy and fairness of \n" + \
                  classifier_name + " trained on " + dataset_name + " dataset"
 
-    g = (ggplot(dataframe)
-         + scale_x_continuous(name="accuracy")
-         + scale_y_continuous(name="fairness")
+    g = (pn.ggplot(dataframe)
+         + pn.scale_x_continuous(name="accuracy")
+         + pn.scale_y_continuous(name="fairness")
          # + scale_y_continuous(name="fairness", limits=(0,1.2))
-         + geom_rect(data=dataframe, mapping=aes(xmin=dataframe["x1"], xmax=dataframe["x2"], ymin=dataframe["y1"],
-                                                 ymax=dataframe["y2"], fill=dataframe["t"]), color="black", alpha=0.6)
+         + pn.geom_rect(data=dataframe, mapping=pn.aes(xmin=dataframe["x1"], xmax=dataframe["x2"], ymin=dataframe["y1"],
+                                                       ymax=dataframe["y2"], fill=dataframe["t"]), color="black", alpha=0.6)
          # color="black", alpha=1)
          # + geom_text(aes(x=dataframe["x1"] + (dataframe["x2"] - dataframe["x1"]) / 2,
          #                 y=dataframe["y1"] + (dataframe["y2"] - dataframe["y1"]) / 2, label=dataframe["r"]),
          #             data=dataframe, size=5)
-         + labs(title=plot_title, fill='Preprocessing')
-         + theme(legend_margin=-10, legend_box_spacing=0)
+         + pn.labs(title=plot_title, fill='Preprocessing')
+         + pn.theme(legend_margin=-10, legend_box_spacing=0)
          )
     print(g)
     g.save(plots_path + dataset_name + "-" + classifier_name + ".png")
@@ -136,10 +136,8 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
 
 def main():
     data_baseline = read_data_baseline("json_files/baseline_splits.json")
-    # plots_path = "plots/baseline/"
 
     data_fairboost = read_data_fairboost("json_files/fairboost_splits.json")
-    # plots_path = "plots/fairboost/"
 
     data = Merge(data_baseline, data_fairboost)
     plots_path = "plots/"
@@ -148,7 +146,8 @@ def main():
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
-            rectangular_plot(data, plots_path=plots_path, dataset_name=dataset, classifier_name=classifier)
+            rectangular_plot(data, plots_path=plots_path,
+                             dataset_name=dataset, classifier_name=classifier)
 
 
 if __name__ == '__main__':
