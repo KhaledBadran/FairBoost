@@ -23,7 +23,7 @@ def save_results(filename: str, results: Dict, experiment_details: Dict = {}):
     experiment_results = {
         "experiment_details": experiment_details, "results": results}
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    results_dir = Path(dir_path, "results")
+    results_dir = Path(dir_path, "results", 'raw_data')
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(f"{results_dir}/{filename}.json", "w") as fp:
         json.dump(experiment_results, fp, indent=4, cls=FunctionEncoder)
