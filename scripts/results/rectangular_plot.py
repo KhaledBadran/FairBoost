@@ -121,7 +121,7 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
         print(g)
     # Save the plots
     plots_dir.mkdir(parents=True, exist_ok=True)
-    file_name = dataset_name + "-" + classifier_name + ".png"
+    file_name = f'rectangular-{dataset_name}-{classifier_name}.pdf'
     file_path = Path(plots_dir, file_name)
     g.save(file_path)
     return g
@@ -134,7 +134,8 @@ def read_data() -> Dict:
             Returns:
                     data: the data contained in both files
     """
-    data_path = Path("raw_data")
+    file_dir = Path(__file__).parent.resolve()
+    data_path = Path(file_dir, "raw_data").resolve()
     fairboost_results_path = Path(data_path, 'fairboost_splits.json')
     baseline_results_path = Path(data_path, 'baseline_splits.json')
     data_baseline = read_data_baseline(baseline_results_path)
