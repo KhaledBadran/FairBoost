@@ -54,6 +54,8 @@ def results_to_dataframe(results, preprocessing_method):
     len_ = len(results[list(results.keys())[0]])
     results['preprocessing method'] = [
         str(preprocessing_method) for _ in range(len_)]
+    results['fairness'] = 1 - \
+        np.abs((1-np.array(results['disparate_impact'])))
     return pd.DataFrame.from_dict(results)
 
 
@@ -74,8 +76,6 @@ def get_preproc_datapoints(data: Dict, dataset_name, classifier_name, preprocess
         results = data['baseline'][dataset_name][preprocessing_method][classifier_name]
     else:
         results = data['baseline'][dataset_name][preprocessing_method][0]['results'][classifier_name]
-    results['fairness'] = 1 - \
-        np.abs((1-np.array(results['disparate_impact'])))
     return results_to_dataframe(results, preprocessing_method)
 
 
@@ -104,7 +104,7 @@ def plot_paretto_front(df, dataset_name, classifier_name, print_figures=False, p
     Xs = df[X_axis_metric].to_numpy()
     Ys = df[Y_axis_metric].to_numpy()
     p_front = pareto_frontier(Xs, Ys)
-    plt.plot(p_front[0], p_front[1])
+    plt.plot(p_front[0], p_front[1], 'k--')
     if print_figures:
         plt.show()
 
