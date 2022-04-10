@@ -142,8 +142,8 @@ def apply_OptimPreproc(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via the Optimized Preprocessing technique
     """
-    train_dataset_OP, test_dataset_OP = train_dataset.copy(
-        deepcopy=True), test_dataset.copy(deepcopy=True)
+    # train_dataset_OP, test_dataset_OP = train_dataset.copy(
+    #     deepcopy=True), test_dataset.copy(deepcopy=True)
 
     OP = OptimPreproc(
         OptTools, hyperparameters["optim_options"], verbose=False)

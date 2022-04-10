@@ -12,7 +12,7 @@ from aif360.algorithms.preprocessing.optim_preproc_helpers.distortion_functions 
     get_distortion_compas,
 )
 from typeguard import typechecked
-
+from sklearn.model_selection import ParameterGrid
 from .enums import Preproc_name, Dataset_name
 
 
@@ -28,6 +28,11 @@ def initialize_german_dataset(protected_attributes: List = ["sex"]) -> BinaryLab
     ds.labels = ds.labels % 2  # turns 2s into 0 while keeping 1s the same
     ds.favorable_label = 1
     ds.unfavorable_label = 0
+
+    # set the correct labels because the labels changed and its important for Optimized Preprocessing Distortion
+    ds.label_map = {1.0: 'Good Credit', 0.0: 'Bad Credit'}
+    ds.metadata['label_maps'] = [{1.0: 'Good Credit', 0.0: 'Bad Credit'}]
+
     return ds
 
 
@@ -50,7 +55,17 @@ def initialize_compass_dataset(protected_attributes: List = ["sex"]) -> BinaryLa
     :param protected_attributes: The protected attributes of the dataset
     :return: The compass dataset
     """
-    return load_preproc_data_compas(protected_attributes)
+
+    ds = load_preproc_data_compas(protected_attributes)
+    ds.labels = 1 - ds.labels  # turns 1s into 0s and 0s to 1s
+    ds.favorable_label = 1
+    ds.unfavorable_label = 0
+
+    # set the correct labels because the labels changed and its important for Optimized Preprocessing Distortion
+    ds.label_map = {0.0: 'Did recid.', 1.0: 'No recid.'}
+    ds.metadata['label_maps'] = [{0.0: 'Did recid.', 1.0: 'No recid.'}]
+
+    return ds
 
 
 @typechecked
@@ -112,6 +127,41 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
             }],
             Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
+        }
+    else:
+        raise Exception('Error in dataset hyperparameter initialization')
+
+
+@typechecked
+def get_LFR_hyperparameters_search(dataset_name: Dataset_name):
+    """
+    Returns the different hyperparameters we searched for each dataset,
+    for each unfairness mitigation technique.
+    It must replace "get_preproc_hyperparameters" in constant file to be used. 
+
+    :param dataset_name: The name of the dataset 
+    :return: The hyperparameters of every preprocessing function
+    """
+    if dataset_name == Dataset_name.GERMAN:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
+        }
+    elif dataset_name == Dataset_name.ADULT:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
+        }
+    elif dataset_name == Dataset_name.COMPASS:
+        return {
+            Preproc_name.LFR: list(ParameterGrid({
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "transform": [{"threshold": 0.5}],
+            })),
         }
     else:
         raise Exception('Error in dataset hyperparameter initialization')
