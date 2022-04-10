@@ -3,38 +3,22 @@
 # https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_meta_classifier.ipynb
 # https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html
 import numpy as np
-import pandas as pd
-import json
 from collections import defaultdict
 from datetime import datetime
-
-# Fairness metrics
-from aif360.metrics import BinaryLabelDatasetMetric
-from aif360.metrics import ClassificationMetric
-from aif360.datasets import BinaryLabelDataset
-from sklearn.metrics import accuracy_score
-
-# Explainers
-from aif360.explainers import MetricTextExplainer
-
-# Scalers
 from sklearn.preprocessing import StandardScaler
-
-# Bias mitigation techniques
+from aif360.datasets import BinaryLabelDataset
 from aif360.algorithms.preprocessing import (
     Reweighing,
     DisparateImpactRemover,
     LFR,
     OptimPreproc,
 )
-
 from aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools import OptTools
 
 # Experiment constants
-from constants.splits import (
+from configs.constants import (
     DATASETS,
     CLASSIFIERS,
-    HYPERPARAMETERS,
     SEEDS,
     CLASSIFIERS_HYPERPARAMETERS,
 )
@@ -44,7 +28,7 @@ from utils import save_results, measure_results, merge_results_array
 
 # typechecking
 from typeguard import typechecked
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Tuple
 
 np.random.seed(0)
 
@@ -68,7 +52,7 @@ def train_test_models(
 
     # Train models
     X_train, y_train = train_dataset.features, train_dataset.labels.ravel()
-    X_test, y_test = test_dataset.features, test_dataset.labels.ravel()
+    X_test = test_dataset.features
 
     for clf_name, clf in CLASSIFIERS.items():
         print(f"\nevaluating classifier {clf_name}")
@@ -150,6 +134,7 @@ def apply_OptimPreproc(
     train_dataset: BinaryLabelDataset,
     test_dataset: BinaryLabelDataset,
     dataset_info: Dict,
+    hyperparameters: Dict,
 ) -> Tuple[BinaryLabelDataset, BinaryLabelDataset]:
     """
     :param train_dataset: an AIF360 dataset containing the training examples with their labels
@@ -157,8 +142,11 @@ def apply_OptimPreproc(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via the Optimized Preprocessing technique
     """
+    # train_dataset_OP, test_dataset_OP = train_dataset.copy(
+    #     deepcopy=True), test_dataset.copy(deepcopy=True)
 
-    OP = OptimPreproc(OptTools, dataset_info["optim_options"], verbose=False)
+    OP = OptimPreproc(
+        OptTools, hyperparameters["optim_options"], verbose=False)
 
     OP = OP.fit(train_dataset)
 
@@ -202,7 +190,8 @@ def apply_LFR(
         verbose=0,  # Default parameters
     )
 
-    LFR_transformer = LFR_transformer.fit(train_dataset, maxiter=5000, maxfun=5000)
+    LFR_transformer = LFR_transformer.fit(
+        train_dataset, maxiter=5000, maxfun=5000)
 
     # Transform training data and align features
     train_dataset_LFR = LFR_transformer.transform(
@@ -231,6 +220,11 @@ def apply_preprocessing_algo(
     :param dataset_info: information about the dataset including privileged and unprivileged groups
     :return: a train and test datasets that have been transformed via one of the preprocessing techniques
     """
+
+    # just an initialization
+    train_dataset_transformed, test_dataset_transformed = train_dataset.copy(
+        deepcopy=True), test_dataset.copy(deepcopy=True)
+
     try:
         if algo_name == "Reweighing":
             train_dataset_transformed, test_dataset_transformed = apply_reweighing(
@@ -243,7 +237,7 @@ def apply_preprocessing_algo(
 
         elif algo_name == "OptimPreproc":
             train_dataset_transformed, test_dataset_transformed = apply_OptimPreproc(
-                train_dataset, test_dataset, dataset_info
+                train_dataset, test_dataset, dataset_info, hyperparameters
             )
 
         elif algo_name == "LFR":
@@ -254,6 +248,9 @@ def apply_preprocessing_algo(
     except Exception as e:
         print(f"Failed to pre-process the dataset. The error msg is:")
         print(e)
+
+    # Make sure test labels are not modified
+    test_dataset_transformed.labels = test_dataset.labels
 
     return (
         train_dataset_transformed,
@@ -325,7 +322,7 @@ def evaluate_mitigation_techniques(
     for (
         debaiasing_algo_name,
         hyperparameters_space,
-    ) in HYPERPARAMETERS.items():
+    ) in dataset_info['hyperparams'].items():
         print(f"\n\n####After applying {debaiasing_algo_name}######\n")
 
         results[dataset_name][debaiasing_algo_name] = []
@@ -379,7 +376,8 @@ def main():
         dataset: BinaryLabelDataset = dataset_info["original_dataset"]
 
         print(f"\n\n---------- Baselines ----------")
-        results = evaluate_baseline(results, dataset, dataset_name, dataset_info)
+        results = evaluate_baseline(
+            results, dataset, dataset_name, dataset_info)
 
         print(f"\n\n---------- Unfairness Mitigation techniques ----------")
         results = evaluate_mitigation_techniques(
@@ -389,7 +387,6 @@ def main():
     experiment_details = {
         "DATE": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "CLASSIFIERS_HYPERPARAMETERS": CLASSIFIERS_HYPERPARAMETERS,
-        "HYPERPARAMETERS": HYPERPARAMETERS,
         "SEEDS": SEEDS,
     }
 
