@@ -128,14 +128,13 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
 
 
 @typechecked
-def read_data(data_path=Path("json_files")) -> Dict:
+def read_data() -> Dict:
     """
     Read data from files and return its content in dictionnaries.
-            Parameters:
-                    data_path: path with the files to read from.
             Returns:
                     data: the data contained in both files
     """
+    data_path = Path("raw_data")
     fairboost_results_path = Path(data_path, 'fairboost_splits.json')
     baseline_results_path = Path(data_path, 'baseline_splits.json')
     data_baseline = read_data_baseline(baseline_results_path)
