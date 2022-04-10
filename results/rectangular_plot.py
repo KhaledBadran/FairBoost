@@ -3,6 +3,7 @@ from typing import List, Dict
 
 import pandas as pd
 import numpy as np
+from pathlib import Path
 import plotnine as pn
 from typeguard import typechecked
 
@@ -103,7 +104,7 @@ def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
 
 
 @typechecked
-def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name="", print_figures=False):
+def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figures=False, plots_dir=Path("plots/")):
     """
     Plots the rectangles plots.
             Parameters:
@@ -131,7 +132,11 @@ def rectangular_plot(data: Dict, plots_path, dataset_name="", classifier_name=""
          )
     if print_figures:
         print(g)
-    g.save(plots_path + dataset_name + "-" + classifier_name + ".png")
+    # Save the plots
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    file_name = dataset_name + "-" + classifier_name + ".png"
+    file_path = Path(plots_dir, file_name)
+    g.save(file_path)
     return g
 
 
@@ -140,14 +145,13 @@ def main():
     data_fairboost = read_data_fairboost("json_files/fairboost_splits.json")
 
     data = Merge(data_baseline, data_fairboost)
-    plots_path = "plots/"
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
-            rectangular_plot(data, plots_path=plots_path,
-                             dataset_name=dataset, classifier_name=classifier, print_figures=False)
+            rectangular_plot(data, dataset_name=dataset,
+                             classifier_name=classifier, print_figures=False)
 
 
 if __name__ == '__main__':
