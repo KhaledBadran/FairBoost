@@ -8,19 +8,6 @@ import plotnine as pn
 from typeguard import typechecked
 
 
-def Merge(dict1, dict2):
-    """
-    Merges two dicts.
-            Parameters:
-                    dict1 : first dict to merge
-                    dict2 : second dict to merge
-            Returns:
-                    res (Dict): a dict merging dict1 and dict2
-    """
-    res = {**dict1, **dict2}
-    return res
-
-
 def read_data_baseline(path):
     """
     Generates a dict object representing the data in the baseline_splits.json.
@@ -140,11 +127,24 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
     return g
 
 
-def main():
-    data_baseline = read_data_baseline("json_files/baseline_splits.json")
-    data_fairboost = read_data_fairboost("json_files/fairboost_splits.json")
+@typechecked
+def read_data(data_path=Path("json_files")) -> Dict:
+    """
+    Read data from files and return its content in dictionnaries.
+            Parameters:
+                    data_path: path with the files to read from.
+            Returns:
+                    data: the data contained in both files
+    """
+    fairboost_results_path = Path(data_path, 'fairboost_splits.json')
+    baseline_results_path = Path(data_path, 'baseline_splits.json')
+    data_baseline = read_data_baseline(baseline_results_path)
+    data_fairboost = read_data_fairboost(fairboost_results_path)
+    return {**data_baseline, **data_fairboost}
 
-    data = Merge(data_baseline, data_fairboost)
+
+def main():
+    data = read_data()
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
