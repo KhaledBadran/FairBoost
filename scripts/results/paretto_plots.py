@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import pandas as pd
 import numpy as np
@@ -8,9 +8,6 @@ from typeguard import typechecked
 import enum
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-
-# TODO: this is probably already defined somehwere
 
 
 class Preprocessing_names(str, enum.Enum):
@@ -30,13 +27,28 @@ class Bootstrap_type(str, enum.Enum):
     CUSTOM = 'CUSTOM'
 
 
-def read_results(path):
+@typechecked
+def read_results(path: Path) -> Dict:
+    """
+    Reads a json file and returns a dict
+            Parameters:
+                    path : path of the json file.
+            Returns:
+                    data: the data in the file
+    """
     with open(path, 'r') as f:
         data = json.load(f)
     return data
 
 
+@typechecked
 def read_data() -> Dict:
+    """
+    Reads all the raw results files and return a dictionnary
+    with their information.
+            Returns:
+                    data: the data in the files
+    """
     # Building paths
     file_dir = Path(__file__).parent.resolve()
     data_path = Path(file_dir, "raw_data").resolve()
@@ -49,7 +61,17 @@ def read_data() -> Dict:
     return data
 
 
-def results_to_dataframe(results, preprocessing_method):
+@typechecked
+def results_to_dataframe(results: Dict, preprocessing_method: str) -> pd.DataFrame:
+    """
+    Transforms a leaf-level dictionnary of the result files into a Dataframe.
+    Saves in the dataframe the preprocessing method name and 1 - abs(1-DI) fairness metric.
+            Parameters:
+                    results : The leaf-level dictionnary with results.
+                    preprocessing_method : name of the preprocessing method.
+            Returns:
+                    data: the dataframe version of the dictionnary
+    """
     # Getting the length of arrays (the number of seeds)
     len_ = len(results[list(results.keys())[0]])
     results['preprocessing method'] = [
@@ -59,7 +81,19 @@ def results_to_dataframe(results, preprocessing_method):
     return pd.DataFrame.from_dict(results)
 
 
-def get_fairboost_datapoints(data: Dict, dataset_name, classifier_name, boostrap_type: Bootstrap_type):
+@typechecked
+def get_fairboost_datapoints(data: Dict, dataset_name: str, classifier_name: str, boostrap_type: Bootstrap_type) -> pd.DataFrame:
+    """
+    Fetches Fairboost's datapoints from the data dictionnary
+    with their information.
+            Parameters:
+                    data : The results of the expiriments.
+                    dataset_name: 
+                    classifier_name: 
+                    boostrap_type: The bootstrap type hyperparam of Fairboost.
+            Returns:
+                    Fairboost's datapoints
+    """
     all_types = set([str(Preprocessing_names.LFR), str(
         Preprocessing_names.OptimPreproc), str(Preprocessing_names.Reweighing)])
     for config in data['fairboost'][dataset_name]['fairboost']:
@@ -71,15 +105,37 @@ def get_fairboost_datapoints(data: Dict, dataset_name, classifier_name, boostrap
     return results_to_dataframe(results, f'Fairboost_{boostrap_type}')
 
 
-def get_preproc_datapoints(data: Dict, dataset_name, classifier_name, preprocessing_method: Preprocessing_names):
+@typechecked
+def get_preproc_datapoints(data: Dict, dataset_name: str, classifier_name: str, preprocessing_method: Preprocessing_names) -> pd.DataFrame:
+    """
+    Fetches Fairboost's datapoints from the data dictionnary
+    with their information.
+            Parameters:
+                    data : The results of the expiriments.
+                    dataset_name: 
+                    classifier_name: 
+                    preprocessing_method: The name of the preprocessing method.
+            Returns:
+                    Preprocessing methods' datapoints
+    """
     if preprocessing_method == Preprocessing_names.Baseline:
         results = data['baseline'][dataset_name][preprocessing_method][classifier_name]
     else:
         results = data['baseline'][dataset_name][preprocessing_method][0]['results'][classifier_name]
-    return results_to_dataframe(results, preprocessing_method)
+    return results_to_dataframe(results, str(preprocessing_method))
 
 
-def to_dataframe(data: Dict, dataset_name, classifier_name):
+@typechecked
+def to_dataframe(data: Dict, dataset_name: str, classifier_name: str) -> pd.DataFrame:
+    """
+    Transform the dictionnary with the results into a dataframe.
+            Parameters:
+                    data : The results of the expiriments.
+                    dataset_name: 
+                    classifier_name: 
+            Returns:
+                    data: The results of the expiriments.
+    """
     dfs = []
     # Fetching data points for each preprocessing method
     for preprocessing_method in Preprocessing_names:
@@ -93,7 +149,17 @@ def to_dataframe(data: Dict, dataset_name, classifier_name):
     return pd.concat(dfs)
 
 
-def plot_paretto_front(df, dataset_name, classifier_name, print_figures=False, plots_dir=Path("plots/")):
+@typechecked
+def plot_paretto_front(df: pd.DataFrame, dataset_name: str, classifier_name: str, print_figures=False, plots_dir=Path("plots/")):
+    """
+    Plots the paretto front.
+            Parameters:
+                    df : The results of the expiriments.
+                    dataset_name: 
+                    classifier_name: 
+                    print_figures: True to show figures.
+                    plots_dir: Where to save the plots.
+    """
     X_axis_metric, Y_axis_metric = 'f1-score', 'fairness'
     sns.set_theme(style="white")
     p = sns.relplot(x=X_axis_metric, y=Y_axis_metric,
@@ -114,21 +180,25 @@ def plot_paretto_front(df, dataset_name, classifier_name, print_figures=False, p
     p.figure.savefig(file_path)
 
 
-def pareto_frontier(ObjectiveX, objectiveY, optimizeObjectiveX=True, optimizeObjectiveY=True):
+@typechecked
+def pareto_frontier(X: np.array, Y: np.array, optimizeX=True, optimizeY=True) -> Tuple:
     '''
-    #https://sirinnes.wordpress.com/2013/04/25/pareto-frontier-graphic-via-python/
-    Method to take two equally-sized lists and return just the elements which lie 
-    on the Pareto frontier, sorted into order.
-    Default behaviour is to find the maximum for both X and Y, but the option is
-    available to specify maxX = False or maxY = False to find the minimum for either
-    or both of the parameters.
+    Fetches the points of the paretto frontier.
+    Taken from: https://sirinnes.wordpress.com/2013/04/25/pareto-frontier-graphic-via-python/
+            Parameters:
+                    X: The X values of the datapoint in the graph.
+                    Y: The Y values of the datapoint in the graph.
+                    optimizeX: Wheter to maximize or not on the X axis.
+                    optimizeY: Wheter to maximize or not on the Y axis.
+            Returns:
+                    (p_frontX, p_frontY): The X and Y coordinates of the points of the paretto frontier.
     '''
-    orderedList = sorted([[ObjectiveX[i], objectiveY[i]]
-                         for i in range(len(ObjectiveX))], reverse=optimizeObjectiveX)
+    orderedList = sorted([[X[i], Y[i]]
+                         for i in range(len(X))], reverse=optimizeX)
     p_front = [orderedList[0]]
 
     for pair in orderedList[1:]:
-        if optimizeObjectiveY:
+        if optimizeY:
             if pair[1] >= p_front[-1][1]:
                 p_front.append(pair)
         else:
