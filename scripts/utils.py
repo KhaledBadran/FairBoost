@@ -1,4 +1,5 @@
 from collections import defaultdict
+import math
 from typeguard import typechecked
 from pathlib import Path
 import os
@@ -49,7 +50,8 @@ def get_manual_DI(dataset: BinaryLabelDataset) -> float:
     ratio_protected = len(y_protected[y_protected ==
                                       dataset.favorable_label]) / len(y_protected)
 
-    return ratio_protected / ratio_unprotected
+    # Added small smoothing value
+    return ratio_protected / (ratio_unprotected + 1e-8)
 
 
 @typechecked
@@ -84,6 +86,9 @@ def measure_results(
     accuracy = accuracy_score(test_dataset.labels, classified_dataset.labels)
     f1 = f1_score(test_dataset.labels, classified_dataset.labels)
     disparate_impact = classification_metric_bin.disparate_impact()
+    # Because of bugs in AIF360 implementation
+    if math.isnan(disparate_impact):
+        disparate_impact = 0
     average_odds_difference = classification_metric.average_odds_difference()
 
     # print(f"accuracy {accuracy}")
