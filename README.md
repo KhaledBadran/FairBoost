@@ -1,26 +1,26 @@
 # FairBoost
-TODO: description of fairboost
+Fairboost is a unfairness tools that combines preprocessing tools via an ensemble to achieve fair and accurate results. For more details, refer to the paper.  
 
 ## Installation
 Because of AIF360, some dependencies have to be manually handled. We recommend replicating the following procedure for the installation of our project. It will suppose you have conda installed.
 
 1. Start by creating a virtual environment with python 3.7 installed
-```bash
+```Shell
 conda create --name fairboost python=3.7
 ``` 
 
 2. Activate the environment
-```bash
+```Shell
 conda activate fairboost
 ``` 
 
 3. Pre-install a dependency of AIF360 
-``` bash
+```Shell
 conda install -c conda-forge cvxpy
 ```
 
 4. Install the project's dependencies
-``` bash
+```Shell
 pip install -r requirements.txt
 ```
 
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ## How to use fairboost
 Fairboost's API is inspired by sklearn. Using it should feel familiar. To use Fairboost, we must first define the preprocessing algorithms we will use:
 
-```python3
+```python
 from aif360.algorithms.preprocessing import Reweighing, OptimPreproc, LFR, DisparateImpactRemover
 
 pp1 = Reweighing(unprivileged_groups=unprivileged_groups,
@@ -42,13 +42,14 @@ For this exemple, we use only Reweighing and DisparateImpactRemover. The complet
 
 We select the model that will be used by Fairboost.
 
-``` python3
+```python
 from sklearn.linear_model import LogisticRegression
 model = LogisticRegression()
 ```
 
 Finally, we instantiate Fairboost using the model and the preprocessing techniques we have defined before. Fairboost is trained via `fit` function and output predictions via the `predict` function.
-``` python3
+
+```python
 ens = FairBoost(model, pp, bootstrap_type=Bootstrap_type.CUSTOM)
 ens = ens.fit(dataset_orig_train)
 y_pred = ens.predict(dataset_orig_test)

@@ -22,7 +22,7 @@ class FairBoost(object):
     def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
         """
                 Parameters:
-                        model:  The model that will be used by Faiboost.
+                        model:  The model that will be used by Fairboost.
                                 Should follow sklearn API (fit and transform functions)
                         preprocessing_functions: The unfairness mitigation techniques.
                         bootstrap_type: The type of boostraping (including not doing any).
