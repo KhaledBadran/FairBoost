@@ -21,7 +21,7 @@ class Bootstrap_type(str, Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63, verbose=False):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, verbose=False):
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
@@ -118,7 +118,7 @@ class FairBoost(object):
             res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
         return res
 
-    def __initialize_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
+    def __prefill_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
         Assign each instance of a data set to one of the bootstrap data sets. 
                 Parameters:
@@ -158,31 +158,58 @@ class FairBoost(object):
                 (bootstrap_datasets[i], dataset[indexes])) if len(bootstrap_datasets[i]) > 0 else dataset[indexes]
         return bootstrap_datasets
 
+    def __get_p_arrays(self, datasets) -> List:
+        '''
+        Generates the probability distributions for the bootstrapping
+        process. If we use CUSTOM bootstrapping, instances that differs
+        a lot between preprocess datasets will have higher chances of
+        being picked up. If we use DEFAULT boostrapping, simply return 
+        a None array, which is the equivalent of a uniform distribution.
+                Parameters:
+                        datasets: The dataset that will be used for boostrapping.
+                Returns:
+                        p_arrays (list<np.array>): An array of probability distribution per dataset.
+        '''
+        p_arrays = [None for _ in range(len(datasets))]
+        if self.bootstrap_type == Bootstrap_type.CUSTOM:
+            p_arrays = self.__get_avg_dist_arr(datasets)
+            p_arrays = softmax(p_arrays, axis=1).tolist()
+        return p_arrays
+
+    def __get_bootstrap_datasets(self, datasets: np.array, p_array=[]) -> List:
+        '''
+        Generates boostrap datasets using the given datasets. 
+        The boostrapping process uses the probability distribution
+        specified in the p_array.
+                Parameters:
+                        datasets: The dataset used for boostrapping.
+                        p_array: An array containing the probability each instance
+                                 is picked up in the bootstrapping process.
+                Returns:
+                        bootstrap_datasets (list<np.array>): The bootstrap datasets
+        '''
+        b_datasets = [np.array([]) for _ in range(len(datasets))]
+        if self.bootstrap_type == Bootstrap_type.CUSTOM:
+            b_datasets = self.__prefill_bootstrap_datasets(datasets)
+
+        b_datasets = self.__fill_boostrap_datasets(
+            b_datasets, datasets, p_array)
+        return b_datasets
+
     def __bootstrap_datasets(self, datasets: List[Tuple]) -> List[Tuple]:
         '''
-        Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
+        Generates the bootstrap datasets for bagging.
                 Parameters:
-                        dataset
+                        datasets
 
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-
         datasets = self.__merge_Xyw(datasets)
-        # If we do the custom bootstrapping, we must define a custom PDF
-        if self.bootstrap_type == Bootstrap_type.CUSTOM:
-            dist_arrays = self.__get_avg_dist_arr(datasets)
-            dist_arrays = softmax(dist_arrays, axis=1).tolist()
-            bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
-        else:
-            dist_arrays = [None for _ in range(len(datasets))]
-            bootstrap_datasets = [np.array([]) for _ in range(len(datasets))]
-
-        bootstrap_datasets = self.__fill_boostrap_datasets(
-            bootstrap_datasets, datasets, dist_arrays)
-
-        bootstrap_datasets = self.__unmerge_Xy(bootstrap_datasets)
-        return bootstrap_datasets
+        p_arrays = self.__get_p_arrays(datasets)
+        b_datasets = self.__get_bootstrap_datasets(datasets, p_arrays)
+        b_datasets = self.__unmerge_Xy(b_datasets)
+        return b_datasets
 
     def fit(self, dataset: BinaryLabelDataset):
         '''
