@@ -9,7 +9,7 @@ from scipy.special import softmax
 from typing import List, Tuple
 
 from FairBoost.wrappers import Preprocessing
-from .utils import quiet, concat_datasets
+from .utils import quiet, concat_datasets, merge_tuples, unmerge_tuples
 
 
 class Bootstrap_type(str, Enum):
@@ -95,37 +95,6 @@ class FairBoost(object):
 
         dist_arr = dist_arr.transpose([1, 0])
         return dist_arr
-
-    def __merge_Xyw(self, datasets: List[Tuple]) -> np.array:
-        '''
-        Returns instances where the last feature is the label.
-                Parameters:
-                        datasets: List with X, y and weight pairs.
-
-                Returns:
-                        res: List with concatenated X and y.
-        '''
-        res = []
-        for dataset in datasets:
-            X, y, w = dataset[0], dataset[1], np.expand_dims(
-                dataset[2], axis=-1)
-            m = np.concatenate([X, y, w], axis=-1)
-            res.append(m)
-        return np.array(res)
-
-    def __unmerge_Xy(self, datasets: List[np.array]) -> List[Tuple]:
-        '''
-        Return X,y from a dataset where y is the last column
-                Parameters:
-                        datasets: List with concatenated X and y.
-
-                Returns:
-                        res: List with X, y and weight pairs.
-        '''
-        res = []
-        for dataset in datasets:
-            res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
-        return res
 
     def __prefill_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
@@ -223,10 +192,10 @@ class FairBoost(object):
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-        datasets = self.__merge_Xyw(datasets)
+        datasets = merge_tuples(datasets)
         p_arrays = self.__get_p_arrays(datasets)
         b_datasets = self.__get_bootstrap_datasets(datasets, p_arrays)
-        b_datasets = self.__unmerge_Xy(b_datasets)
+        b_datasets = unmerge_tuples(b_datasets)
         return b_datasets
 
     def fit(self, dataset: BinaryLabelDataset):
