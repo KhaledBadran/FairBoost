@@ -1,7 +1,7 @@
 import warnings
 import os
 import sys
-
+import numpy as np
 
 def quiet(func, args):
     '''
@@ -20,3 +20,13 @@ def quiet(func, args):
         res = func(*args)
         sys.stdout = sys.__stdout__
     return res
+
+
+def concat_datasets(d1, d2):
+        """
+        Concats two datasets d1 and d2 where d1 may be empty.
+        """
+        if len(d1) > 0:
+            return np.concatenate((d1, d2))
+        else:
+            return d2

@@ -7,10 +7,9 @@ from enum import Enum
 from aif360.datasets import BinaryLabelDataset
 from scipy.special import softmax
 from typing import List, Tuple
-# import  ipdb
 
 from FairBoost.wrappers import Preprocessing
-from .utils import quiet
+from .utils import quiet, concat_datasets
 
 
 class Bootstrap_type(str, Enum):
@@ -172,8 +171,8 @@ class FairBoost(object):
             crnt_size = len(bootstrap_datasets[i])
             indexes = np.random.choice([i for i in range(len(dataset))],
                                        size=(required_size-crnt_size), replace=True, p=p)
-            bootstrap_datasets[i] = np.concatenate(
-                (bootstrap_datasets[i], dataset[indexes]))
+            bootstrap_datasets[i] = concat_datasets(
+                bootstrap_datasets[i], dataset[indexes])
         return bootstrap_datasets
 
     def __get_p_arrays(self, datasets) -> List:
