@@ -1,7 +1,6 @@
 ## imports ##
 import numpy as np
 from sklearn.base import clone
-import scipy.spatial.distance as dist
 from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
@@ -9,7 +8,7 @@ from scipy.special import softmax
 from typing import List, Tuple
 
 from FairBoost.wrappers import Preprocessing
-from .utils import quiet, concat_datasets, merge_tuples, unmerge_tuples
+from .utils import quiet, concat_datasets, merge_tuples, unmerge_tuples, get_avg_dist_arr
 
 
 class Bootstrap_type(str, Enum):
@@ -42,7 +41,6 @@ class FairBoost(object):
 
         # The trained models
         self.models = []
-        self.dist_func = dist.cosine
 
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
@@ -65,36 +63,6 @@ class FairBoost(object):
             d = quiet(func, [dataset.copy(deepcopy=True)])
             pp_data.append(d)
         return pp_data
-
-    def __get_avg_dist_arr(self, datasets: np.array) -> np.array:
-        '''
-        For each instance in the initial data set, compute the average distance between the "cleaned" versions.
-                Parameters:
-                        X (np.array): features
-
-                Returns:
-                        dist_arr (np.array): Array with the distance for each instance of each "cleaned" data set.
-        '''
-        # Remove weights from dataset
-        datasets = datasets[:, :, :-1]
-        # Swap the first two dimensions so we iterate over instances instead of data sets
-        datasets = datasets.transpose([1, 0, 2])
-        # Initializing the average distances array
-        dist_arr = np.zeros(
-            shape=(len(datasets), len(self.preprocessing_functions)))
-        # Fill the avg distances array
-        for i, pp_instances in enumerate(datasets):
-            for j, pp_instance_j in enumerate(pp_instances):
-                distances = []
-                for k, pp_instance_k in enumerate(pp_instances):
-                    d = self.dist_func(pp_instance_j, pp_instance_k)
-                    d = np.abs(d)
-                    distances.append(d)
-                # One entry is zero (the distance with itself). Do not consider it in the mean.
-                dist_arr[i, j] = np.sum(distances)/(len(pp_instances)-1)
-
-        dist_arr = dist_arr.transpose([1, 0])
-        return dist_arr
 
     def __prefill_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
@@ -158,7 +126,7 @@ class FairBoost(object):
         '''
         p_arrays = [None for _ in range(len(datasets))]
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
-            p_arrays = self.__get_avg_dist_arr(datasets)
+            p_arrays = get_avg_dist_arr(datasets)
             p_arrays = softmax(p_arrays, axis=1).tolist()
         return p_arrays
 
