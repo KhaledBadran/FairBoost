@@ -182,12 +182,14 @@ def train_test_fairboost(
     pp = init_preprocessing_functions(
         hyperparameters["preprocessing"], dataset_info)
 
+    preprocessed_datasets = None
     for clf_name, clf in CLASSIFIERS.items():
         # print(f"\nFairboost classifier name: {clf_name}")
         try:
             # Training + prediction
             ens = FairBoost(clf, pp, **hyperparameters["init"])
-            ens = ens.fit(train_dataset)
+            ens = ens.fit(train_dataset, preprocessed_datasets)
+            preprocessed_datasets = ens.get_training_datasets()
             y_pred = ens.predict(test_dataset)
 
             # Measuring metrics
