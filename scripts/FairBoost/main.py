@@ -21,11 +21,12 @@ class Bootstrap_type(str, Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, verbose=False):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
         self.bootstrap_size = bootstrap_size
+        self.n_datasets = n_datasets
         self.bootstrap_type = bootstrap_type
         self.verbose = verbose
 
@@ -59,7 +60,7 @@ class FairBoost(object):
 
     def __get_avg_dist_arr(self, datasets: np.array) -> np.array:
         '''
-        For each instance in the initial data set, compute the average distance between the "cleaned" versions. 
+        For each instance in the initial data set, compute the average distance between the "cleaned" versions.
                 Parameters:
                         X (np.array): features
 
@@ -89,7 +90,7 @@ class FairBoost(object):
 
     def __merge_Xyw(self, datasets: List[Tuple]) -> np.array:
         '''
-        Returns instances where the last feature is the label. 
+        Returns instances where the last feature is the label.
                 Parameters:
                         datasets: List with X, y and weight pairs.
 
@@ -106,9 +107,9 @@ class FairBoost(object):
 
     def __unmerge_Xy(self, datasets: List[np.array]) -> List[Tuple]:
         '''
-        Return X,y from a dataset where y is the last column 
+        Return X,y from a dataset where y is the last column
                 Parameters:
-                        datasets: List with concatenated X and y. 
+                        datasets: List with concatenated X and y.
 
                 Returns:
                         res: List with X, y and weight pairs.
@@ -120,42 +121,50 @@ class FairBoost(object):
 
     def __prefill_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
-        Assign each instance of a data set to one of the bootstrap data sets. 
+        Assign each instance of a data set to one of the bootstrap data sets.
                 Parameters:
-                        datasets: List with concatenated X, y and weights. 
+                        datasets: List with concatenated X, y and weights.
 
                 Returns:
                         bootstrap_datasets: List with the bootstrap data sets.
         '''
         bootstrap_datasets = []
-        # Generate indexes array assigns each instance to
-        indexes = [i for i in range(len(self.preprocessing_functions))]
+        n_datasets = len(datasets)*self.n_datasets
+
+        # Randomly select the instances for each boostrap dataset
+        indexes = [i for i in range(n_datasets)]
         indexes = np.random.choice(
             indexes, size=len(datasets[0]), replace=True)
-        for i, dataset in enumerate(datasets):
+
+        # Build the bootstrap datasets
+        for i in range(n_datasets):
+            dataset = datasets[i % len(datasets)]
             bootstrap_datasets.append(dataset[indexes == i])
         return bootstrap_datasets
 
     def __fill_boostrap_datasets(self, bootstrap_datasets: List[np.array], datasets: np.array, p_arrays: List) -> List[np.array]:
         '''
-        Fills the bootstrap data set to the desired size. 
+        Fills the bootstrap data set to the desired size.
                 Parameters:
                         bootstrap_datasets: List with the bootstrap data sets.
-                        datasets:           List with concatenated X, y and w. 
+                        datasets:           List with concatenated X, y and w.
                         p_arrays:           Probability of an instance to be picked in the bootstrap process.
 
                 Returns:
                         bootstrap_datasets (list): List with the bootstrap data sets.
         '''
         required_size = int(self.bootstrap_size*len(datasets[0]))
-        for i, p in enumerate(p_arrays):
+        for i in range(len(bootstrap_datasets)):
+            # Fetch the preprocessed dataset and the associated probability distribution
+            p = p_arrays[i % len(p_arrays)]
+            dataset = datasets[i % len(datasets)]
+
+            # Fill the bootstrap dataset up to the desired size
             crnt_size = len(bootstrap_datasets[i])
-            dataset = datasets[i]
-            indexes = [i for i in range(len(dataset))]
-            indexes = np.random.choice(
-                indexes, size=(required_size-crnt_size), replace=True, p=p)
+            indexes = np.random.choice([i for i in range(len(dataset))],
+                                       size=(required_size-crnt_size), replace=True, p=p)
             bootstrap_datasets[i] = np.concatenate(
-                (bootstrap_datasets[i], dataset[indexes])) if len(bootstrap_datasets[i]) > 0 else dataset[indexes]
+                (bootstrap_datasets[i], dataset[indexes]))
         return bootstrap_datasets
 
     def __get_p_arrays(self, datasets) -> List:
@@ -188,7 +197,8 @@ class FairBoost(object):
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap datasets
         '''
-        b_datasets = [np.array([]) for _ in range(len(datasets))]
+        b_datasets = [np.array([])
+                      for _ in range(len(datasets)*self.n_datasets)]
         if self.bootstrap_type == Bootstrap_type.CUSTOM:
             b_datasets = self.__prefill_bootstrap_datasets(datasets)
 
@@ -242,7 +252,7 @@ class FairBoost(object):
         y_pred = []
         datasets = self.__transform(dataset)
         for i in range(len(self.models)):
-            X, y, _ = datasets[i]
+            X, y, _ = datasets[i % len(datasets)]
             y_pred.append(self.models[i].predict(X))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
