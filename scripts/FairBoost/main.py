@@ -22,6 +22,17 @@ class Bootstrap_type(str, Enum):
 @typechecked
 class FairBoost(object):
     def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
+        """
+                Parameters:
+                        model:  The model that will be used by Faiboost. 
+                                Should follow sklearn API (fit and transform functions)
+                        preprocessing_functions: The unfairness mitigation techniques.
+                        bootstrap_type: The type of boostraping (including not doing any).
+                        bootstrap_size: The size of the bootstrap dataset proportional to the size of the datasets.
+                        n_datasets: The number of bootstrap dataset generated from one dataset
+                        verbose: To set Fairboost in the verbose mode.
+
+        """
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
@@ -32,9 +43,7 @@ class FairBoost(object):
 
         # The trained models
         self.models = []
-        # TODO: consider other distance functions
         self.dist_func = dist.cosine
-        # ipdb.set_trace(context=6)
 
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
