@@ -5,22 +5,23 @@ from FairBoost.main import Bootstrap_type
 from .utils import get_preproc_hyperparameters, initialize_adult_dataset, initialize_compass_dataset, initialize_german_dataset
 from .enums import Dataset_name, Preproc_name
 
-SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+SEEDS = [1]
 
 # ------------------------------- FAIRBOOST GRID ------------------------------- #
 FairBoost_param_grid = {
     'init': {"bootstrap_type": [
-        Bootstrap_type.NONE,
-        Bootstrap_type.DEFAULT,
+        # Bootstrap_type.NONE,
+        # Bootstrap_type.DEFAULT,
         Bootstrap_type.CUSTOM,
     ]},
-    'preprocessing': [[Preproc_name.OptimPreproc],
-                      [Preproc_name.LFR],
-                      [Preproc_name.Reweighing],
-                      [Preproc_name.OptimPreproc, Preproc_name.LFR],
-                      [Preproc_name.OptimPreproc, Preproc_name.Reweighing],
-                      [Preproc_name.LFR, Preproc_name.Reweighing],
-                      [Preproc_name.Reweighing, Preproc_name.LFR, Preproc_name.OptimPreproc]]
+    'preprocessing': [  # [Preproc_name.OptimPreproc],
+        #   [Preproc_name.LFR],
+        #   [Preproc_name.Reweighing],
+        #   [Preproc_name.OptimPreproc, Preproc_name.LFR],
+        # [Preproc_name.OptimPreproc, Preproc_name.Reweighing],
+        #   [Preproc_name.LFR, Preproc_name.Reweighing],
+        [Preproc_name.Reweighing, Preproc_name.LFR, Preproc_name.OptimPreproc]
+    ]
 }
 
 
