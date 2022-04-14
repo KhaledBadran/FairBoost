@@ -4,7 +4,7 @@ from pathlib import Path
 from typeguard import typechecked
 import json
 from typing import List, Dict
-import statistics
+from statistics import harmonic_mean, mean
 
 
 @typechecked
@@ -142,7 +142,7 @@ def compute_avg_h_mean(f1_scores: List, normalized_di_scores: List):
      train-test split runs
     :return: the average harmonic mean over all runs
     """
-    harmonic_means = list(map(lambda x, y: statistics.harmonic_mean([x, y]), f1_scores, normalized_di_scores))
+    harmonic_means = list(map(lambda x, y: harmonic_mean([x, y]), f1_scores, normalized_di_scores))
     return sum(harmonic_means) / len(harmonic_means)
 
 
@@ -163,25 +163,38 @@ def main():
 
     # calculate avg harmonic mean and add it as a column
     h_mean_scores = []
+    f1_scores = []
+    normalized_di_scores = []
+
     for performance_metric in df.loc[:, "metrics"]:
         f1_score = performance_metric["f1-score"]
+        f1_scores.append(mean(f1_score))
 
         di_score = performance_metric["disparate_impact"]
         normalized_di_score = [score if score <= 1 else (score ** -1) for score in di_score]
+        normalized_di_scores.append(mean(normalized_di_score))
 
         h_mean_score = compute_avg_h_mean(f1_score, normalized_di_score)
         h_mean_scores.append(h_mean_score)
+
     df['h_mean'] = h_mean_scores
+    df['f1_score'] = f1_scores
+    df['normalized_di'] = normalized_di_scores
 
     # drop the metrics column to apply aggregation afterwards
     df.drop(['metrics'], axis=1, inplace=True)
 
     # aggregate the results by averaging the h_mean results from all classifiers (currently two: LR + RF)
     groups = df.groupby(['experiment','bootstrap_type','dataset', 'preprocessing'])
-    combined_classifiers = groups['h_mean'].agg([np.mean]).reset_index().sort_values(by=['mean'], ascending=False)
+    df_avg_h_mean = groups['h_mean'].agg([np.mean]).reset_index().sort_values(by=['mean'], ascending=False).rename(columns={"mean": "h_mean"})
+    df_avg_f1_score = groups['f1_score'].agg([np.mean]).reset_index().sort_values(by=['mean'], ascending=False).rename(columns={"mean": "f1_score"})
+    df_avg_normalized_di = groups['normalized_di'].agg([np.mean]).reset_index().sort_values(by=['mean'], ascending=False).rename(columns={"mean": "normalized_di"})
+
+    new_df = pd.merge(df_avg_h_mean, df_avg_f1_score, how='left', left_on=['experiment','bootstrap_type','dataset', 'preprocessing'], right_on=['experiment','bootstrap_type','dataset', 'preprocessing'])
+    new_df = pd.merge(new_df, df_avg_normalized_di, how='left', left_on=['experiment','bootstrap_type','dataset', 'preprocessing'], right_on=['experiment','bootstrap_type','dataset', 'preprocessing'])
 
     #save results into csv file
-    combined_classifiers.to_csv('RQ1_harmonic_mean_results.csv', index=False)
+    new_df.to_csv('RQ1_harmonic_mean_results.csv', index=False)
 
 if __name__ == "__main__":
     main()
