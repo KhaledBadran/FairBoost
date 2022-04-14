@@ -1,0 +1,76 @@
+experiment,bootstrap_type,dataset,preprocessing,mean
+preprocessing,No bootstrap,german,Reweighing,0.8493114316905679
+fairboost,none,german,Reweighing,0.8493114316905679
+fairboost,default,german,LFR,0.8338239550459894
+preprocessing,No bootstrap,german,LFR,0.833141265110666
+fairboost,none,german,"LFR,Reweighing",0.826319242192392
+fairboost,default,german,Reweighing,0.824785754417366
+fairboost,none,german,LFR,0.8247347045837451
+preprocessing,No bootstrap,german,OptimPreproc,0.8197612498761829
+baseline,No bootstrap,german,No Preprocessing,0.819451313461181
+fairboost,custom,german,"LFR,Reweighing",0.8186584133630579
+fairboost,none,german,OptimPreproc,0.8147721452551829
+fairboost,none,german,"OptimPreproc,Reweighing",0.8123417000205512
+fairboost,default,german,OptimPreproc,0.808494508965679
+fairboost,none,german,"LFR,OptimPreproc,Reweighing",0.8057058226960104
+fairboost,default,german,"LFR,Reweighing",0.8055653346095564
+fairboost,none,german,"LFR,OptimPreproc",0.8022590961328213
+ensemble,none,german,No Preprocessing,0.7959886408702265
+fairboost,default,german,"LFR,OptimPreproc",0.793812722061875
+fairboost,default,german,"LFR,OptimPreproc,Reweighing",0.7930634465268469
+fairboost,custom,german,"LFR,OptimPreproc",0.7809498993356065
+fairboost,default,german,"OptimPreproc,Reweighing",0.7791580008399202
+fairboost,none,compas,"OptimPreproc,Reweighing",0.7769762052480736
+preprocessing,No bootstrap,compas,Reweighing,0.7746010841918036
+fairboost,none,compas,Reweighing,0.7746010841918036
+fairboost,none,compas,"LFR,OptimPreproc,Reweighing",0.7728354701622975
+fairboost,none,compas,"LFR,Reweighing",0.7658005754971696
+fairboost,custom,german,"LFR,OptimPreproc,Reweighing",0.7652692656180831
+fairboost,custom,compas,"LFR,Reweighing",0.7608932641838613
+fairboost,default,compas,Reweighing,0.7594681808272608
+fairboost,custom,german,"OptimPreproc,Reweighing",0.7589923791301639
+fairboost,none,compas,OptimPreproc,0.7584605176807103
+fairboost,none,compas,"LFR,OptimPreproc",0.7576792832521454
+preprocessing,No bootstrap,compas,OptimPreproc,0.7575704368977627
+fairboost,default,compas,"LFR,Reweighing",0.7572804473366183
+fairboost,custom,compas,"OptimPreproc,Reweighing",0.7536104867879001
+fairboost,default,compas,"LFR,OptimPreproc",0.7531880769530801
+fairboost,default,compas,"LFR,OptimPreproc,Reweighing",0.7525063017083928
+fairboost,custom,compas,"LFR,OptimPreproc,Reweighing",0.7495942422192938
+fairboost,custom,compas,"LFR,OptimPreproc",0.7452778814789497
+fairboost,default,compas,OptimPreproc,0.7444730302973935
+fairboost,default,compas,"OptimPreproc,Reweighing",0.7408526488248572
+fairboost,default,compas,LFR,0.7212660889307071
+fairboost,none,compas,LFR,0.7195672911059375
+preprocessing,No bootstrap,compas,LFR,0.7151220529163651
+ensemble,none,compas,No Preprocessing,0.7081719130129931
+ensemble,custom,german,No Preprocessing,0.7078839335621758
+baseline,No bootstrap,compas,No Preprocessing,0.7065049423101917
+ensemble,custom,compas,No Preprocessing,0.6827324596390528
+ensemble,default,german,No Preprocessing,0.6793550543794007
+ensemble,default,compas,No Preprocessing,0.6749332350987873
+fairboost,default,adult,Reweighing,0.5490800786174683
+preprocessing,No bootstrap,adult,Reweighing,0.5479346990018072
+fairboost,none,adult,Reweighing,0.5479346990018072
+preprocessing,No bootstrap,adult,LFR,0.5377935079097217
+fairboost,default,adult,LFR,0.5331881997485866
+fairboost,none,adult,LFR,0.5297485093041501
+fairboost,default,adult,"LFR,Reweighing",0.5244969642418861
+fairboost,none,adult,"LFR,Reweighing",0.5187940055993103
+fairboost,custom,adult,"LFR,Reweighing",0.5164115155866734
+fairboost,default,adult,OptimPreproc,0.5129751019470881
+preprocessing,No bootstrap,adult,OptimPreproc,0.4987116145786986
+fairboost,default,adult,"LFR,OptimPreproc",0.48732597267030603
+fairboost,none,adult,OptimPreproc,0.4788431164164392
+fairboost,custom,adult,"LFR,OptimPreproc",0.4723000770364989
+fairboost,none,adult,"LFR,OptimPreproc",0.4714424258399642
+fairboost,default,adult,"LFR,OptimPreproc,Reweighing",0.47035588102254483
+fairboost,custom,adult,"OptimPreproc,Reweighing",0.46224949292624073
+fairboost,none,adult,"LFR,OptimPreproc,Reweighing",0.45188653475589025
+fairboost,none,adult,"OptimPreproc,Reweighing",0.4501211650751774
+fairboost,custom,adult,"LFR,OptimPreproc,Reweighing",0.44259273482208594
+fairboost,default,adult,"OptimPreproc,Reweighing",0.4397925706226333
+ensemble,default,adult,No Preprocessing,0.0
+ensemble,none,adult,No Preprocessing,0.0
+ensemble,custom,adult,No Preprocessing,0.0
+baseline,No bootstrap,adult,No Preprocessing,0.0
