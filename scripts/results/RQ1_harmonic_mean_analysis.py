@@ -194,7 +194,9 @@ def main():
     new_df = pd.merge(new_df, df_avg_normalized_di, how='left', left_on=['experiment','bootstrap_type','dataset', 'preprocessing'], right_on=['experiment','bootstrap_type','dataset', 'preprocessing'])
 
     #save results into csv file
-    new_df.to_csv('RQ1_harmonic_mean_results.csv', index=False)
+    output_dir = Path('RQ_results')
+    output_file = Path(output_dir, 'RQ1_harmonic_mean_results.csv')
+    new_df.to_csv(output_file, index=False)
 
 if __name__ == "__main__":
     main()
