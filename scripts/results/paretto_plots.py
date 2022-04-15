@@ -44,7 +44,7 @@ def read_results(path: Path) -> Dict:
 @typechecked
 def read_data() -> Dict:
     """
-    Reads all the raw results files and return a dictionnary
+    Reads all the raw results files and return a dictionary
     with their information.
             Returns:
                     data: the data in the files
@@ -64,13 +64,13 @@ def read_data() -> Dict:
 @typechecked
 def results_to_dataframe(results: Dict, preprocessing_method: str) -> pd.DataFrame:
     """
-    Transforms a leaf-level dictionnary of the result files into a Dataframe.
+    Transforms a leaf-level dictionary of the result files into a Dataframe.
     Saves in the dataframe the preprocessing method name and 1 - abs(1-DI) fairness metric.
             Parameters:
-                    results : The leaf-level dictionnary with results.
+                    results : The leaf-level dictionary with results.
                     preprocessing_method : name of the preprocessing method.
             Returns:
-                    data: the dataframe version of the dictionnary
+                    data: the dataframe version of the dictionary
     """
     # Getting the length of arrays (the number of seeds)
     len_ = len(results[list(results.keys())[0]])
@@ -84,10 +84,10 @@ def results_to_dataframe(results: Dict, preprocessing_method: str) -> pd.DataFra
 @typechecked
 def get_fairboost_datapoints(data: Dict, dataset_name: str, classifier_name: str, boostrap_type: Bootstrap_type) -> pd.DataFrame:
     """
-    Fetches Fairboost's datapoints from the data dictionnary
+    Fetches Fairboost's datapoints from the data dictionary
     with their information.
             Parameters:
-                    data : The results of the expiriments.
+                    data : The results of the experiments.
                     dataset_name: 
                     classifier_name: 
                     boostrap_type: The bootstrap type hyperparam of Fairboost.
@@ -108,10 +108,10 @@ def get_fairboost_datapoints(data: Dict, dataset_name: str, classifier_name: str
 @typechecked
 def get_preproc_datapoints(data: Dict, dataset_name: str, classifier_name: str, preprocessing_method: Preprocessing_names) -> pd.DataFrame:
     """
-    Fetches Fairboost's datapoints from the data dictionnary
+    Fetches Fairboost's datapoints from the data dictionary
     with their information.
             Parameters:
-                    data : The results of the expiriments.
+                    data : The results of the experiments.
                     dataset_name: 
                     classifier_name: 
                     preprocessing_method: The name of the preprocessing method.
@@ -128,13 +128,13 @@ def get_preproc_datapoints(data: Dict, dataset_name: str, classifier_name: str, 
 @typechecked
 def to_dataframe(data: Dict, dataset_name: str, classifier_name: str) -> pd.DataFrame:
     """
-    Transform the dictionnary with the results into a dataframe.
+    Transform the dictionary with the results into a dataframe.
             Parameters:
-                    data : The results of the expiriments.
+                    data : The results of the experiments.
                     dataset_name: 
                     classifier_name: 
             Returns:
-                    data: The results of the expiriments.
+                    data: The results of the experiments.
     """
     dfs = []
     # Fetching data points for each preprocessing method
@@ -154,7 +154,7 @@ def plot_paretto_front(df: pd.DataFrame, dataset_name: str, classifier_name: str
     """
     Plots the paretto front.
             Parameters:
-                    df : The results of the expiriments.
+                    df : The results of the experiments.
                     dataset_name: 
                     classifier_name: 
                     print_figures: True to show figures.
@@ -188,8 +188,8 @@ def pareto_frontier(X: np.array, Y: np.array, optimizeX=True, optimizeY=True) ->
             Parameters:
                     X: The X values of the datapoint in the graph.
                     Y: The Y values of the datapoint in the graph.
-                    optimizeX: Wheter to maximize or not on the X axis.
-                    optimizeY: Wheter to maximize or not on the Y axis.
+                    optimizeX: Whether to maximize or not on the X axis.
+                    optimizeY: Whether to maximize or not on the Y axis.
             Returns:
                     (p_frontX, p_frontY): The X and Y coordinates of the points of the paretto frontier.
     '''
