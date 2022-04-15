@@ -22,7 +22,7 @@ class FairBoost(object):
     def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
         """
                 Parameters:
-                        model:  The model that will be used by Faiboost. 
+                        model:  The model that will be used by Faiboost.
                                 Should follow sklearn API (fit and transform functions)
                         preprocessing_functions: The unfairness mitigation techniques.
                         bootstrap_type: The type of boostraping (including not doing any).
@@ -38,6 +38,7 @@ class FairBoost(object):
         self.n_datasets = n_datasets
         self.bootstrap_type = bootstrap_type
         self.verbose = verbose
+        self.training_datasets = None
 
         # The trained models
         self.models = []
@@ -166,18 +167,41 @@ class FairBoost(object):
         b_datasets = unmerge_tuples(b_datasets)
         return b_datasets
 
-    def fit(self, dataset: BinaryLabelDataset):
+    def get_training_datasets(self) -> List[Tuple]:
+        """
+        Getter of training datasets. Throws an 
+        error if the training datasets have not been 
+        received yet.
+                Returns:
+                    training_datasets
+        """
+        if self.training_datasets is None:
+            raise Exception(
+                "Fairboost has not been trained yet, thus it has no training dataset.")
+        return self.training_datasets
+
+    def fit(self, dataset: BinaryLabelDataset, preprocessed_datasets=None):
         '''
-        Fit function as per Sklearn API.
+        Fit function similar to Sklearn API. If preprocessed_datasets
+        parameter is given, it will skip the process of generating
+        the datasets on which the models will be trained and will
+        directly use preprocessed_datasets.
                 Parameters:
-                        dataset
+                        dataset: The training data.
+                        preprocessed_datasets:  Datasets that have already been preprocessed 
+                                                and bootstrapped. These dataset are usually obtained
+                                                in a previous instantiation of Fairboost.
 
                 Returns:
                         self
         '''
-        datasets = self.__transform(dataset, fit=True)
-        if self.bootstrap_type != Bootstrap_type.NONE:
-            datasets = self.__bootstrap_datasets(datasets)
+        if preprocessed_datasets is None:
+            datasets = self.__transform(dataset, fit=True)
+            if self.bootstrap_type != Bootstrap_type.NONE:
+                datasets = self.__bootstrap_datasets(datasets)
+        else:
+            datasets = preprocessed_datasets
+        self.training_datasets = datasets
         for X_bootstrap, y_bootstrap, w in datasets:
             y_bootstrap = y_bootstrap.ravel()
             model = clone(self.model)
@@ -187,9 +211,9 @@ class FairBoost(object):
 
     def predict(self, dataset: BinaryLabelDataset) -> np.array:
         '''
-        Predict function as per Sklearn API.
+        Predict function similar to Sklearn API.
                 Parameters:
-                        dataset
+                        dataset: The data used for predictions
 
                 Returns:
                         y_pred: Predicted labels.
