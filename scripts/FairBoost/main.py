@@ -1,16 +1,14 @@
 ## imports ##
 import numpy as np
 from sklearn.base import clone
-import scipy.spatial.distance as dist
 from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
 from scipy.special import softmax
 from typing import List, Tuple
-# import  ipdb
 
 from FairBoost.wrappers import Preprocessing
-from .utils import quiet
+from .utils import quiet, concat_datasets, merge_tuples, unmerge_tuples, get_avg_dist_arr
 
 
 class Bootstrap_type(str, Enum):
@@ -21,19 +19,28 @@ class Bootstrap_type(str, Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=0.63, verbose=False):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
+        """
+                Parameters:
+                        model:  The model that will be used by Faiboost. 
+                                Should follow sklearn API (fit and transform functions)
+                        preprocessing_functions: The unfairness mitigation techniques.
+                        bootstrap_type: The type of boostraping (including not doing any).
+                        bootstrap_size: The size of the bootstrap dataset proportional to the size of the datasets.
+                        n_datasets: The number of bootstrap dataset generated from one dataset
+                        verbose: To set Fairboost in the verbose mode.
+
+        """
         self.model = model
         self.preprocessing_functions = preprocessing_functions
         self.n_elements = len(preprocessing_functions)
         self.bootstrap_size = bootstrap_size
+        self.n_datasets = n_datasets
         self.bootstrap_type = bootstrap_type
         self.verbose = verbose
 
         # The trained models
         self.models = []
-        # TODO: consider other distance functions
-        self.dist_func = dist.cosine
-        # ipdb.set_trace(context=6)
 
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
@@ -57,132 +64,107 @@ class FairBoost(object):
             pp_data.append(d)
         return pp_data
 
-    def __get_avg_dist_arr(self, datasets: np.array) -> np.array:
+    def __prefill_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
         '''
-        For each instance in the initial data set, compute the average distance between the "cleaned" versions. 
+        Assign each instance of a data set to one of the bootstrap data sets.
                 Parameters:
-                        X (np.array): features
-
-                Returns:
-                        dist_arr (np.array): Array with the distance for each instance of each "cleaned" data set.
-        '''
-        # Remove weights from dataset
-        datasets = datasets[:, :, :-1]
-        # Swap the first two dimensions so we iterate over instances instead of data sets
-        datasets = datasets.transpose([1, 0, 2])
-        # Initializing the average distances array
-        dist_arr = np.zeros(
-            shape=(len(datasets), len(self.preprocessing_functions)))
-        # Fill the avg distances array
-        for i, pp_instances in enumerate(datasets):
-            for j, pp_instance_j in enumerate(pp_instances):
-                distances = []
-                for k, pp_instance_k in enumerate(pp_instances):
-                    d = self.dist_func(pp_instance_j, pp_instance_k)
-                    d = np.abs(d)
-                    distances.append(d)
-                # One entry is zero (the distance with itself). Do not consider it in the mean.
-                dist_arr[i, j] = np.sum(distances)/(len(pp_instances)-1)
-
-        dist_arr = dist_arr.transpose([1, 0])
-        return dist_arr
-
-    def __merge_Xyw(self, datasets: List[Tuple]) -> np.array:
-        '''
-        Returns instances where the last feature is the label. 
-                Parameters:
-                        datasets: List with X, y and weight pairs.
-
-                Returns:
-                        res: List with concatenated X and y.
-        '''
-        res = []
-        for dataset in datasets:
-            X, y, w = dataset[0], dataset[1], np.expand_dims(
-                dataset[2], axis=-1)
-            m = np.concatenate([X, y, w], axis=-1)
-            res.append(m)
-        return np.array(res)
-
-    def __unmerge_Xy(self, datasets: List[np.array]) -> List[Tuple]:
-        '''
-        Return X,y from a dataset where y is the last column 
-                Parameters:
-                        datasets: List with concatenated X and y. 
-
-                Returns:
-                        res: List with X, y and weight pairs.
-        '''
-        res = []
-        for dataset in datasets:
-            res.append((dataset[:, :-2], dataset[:, -2], dataset[:, -1]))
-        return res
-
-    def __initialize_bootstrap_datasets(self, datasets: np.array) -> List[np.array]:
-        '''
-        Assign each instance of a data set to one of the bootstrap data sets. 
-                Parameters:
-                        datasets: List with concatenated X, y and weights. 
+                        datasets: List with concatenated X, y and weights.
 
                 Returns:
                         bootstrap_datasets: List with the bootstrap data sets.
         '''
         bootstrap_datasets = []
-        # Generate indexes array assigns each instance to
-        indexes = [i for i in range(len(self.preprocessing_functions))]
+        n_datasets = len(datasets)*self.n_datasets
+
+        # Randomly select the instances for each boostrap dataset
+        indexes = [i for i in range(n_datasets)]
         indexes = np.random.choice(
             indexes, size=len(datasets[0]), replace=True)
-        for i, dataset in enumerate(datasets):
+
+        # Build the bootstrap datasets
+        for i in range(n_datasets):
+            dataset = datasets[i % len(datasets)]
             bootstrap_datasets.append(dataset[indexes == i])
         return bootstrap_datasets
 
     def __fill_boostrap_datasets(self, bootstrap_datasets: List[np.array], datasets: np.array, p_arrays: List) -> List[np.array]:
         '''
-        Fills the bootstrap data set to the desired size. 
+        Fills the bootstrap data set to the desired size.
                 Parameters:
                         bootstrap_datasets: List with the bootstrap data sets.
-                        datasets:           List with concatenated X, y and w. 
+                        datasets:           List with concatenated X, y and w.
                         p_arrays:           Probability of an instance to be picked in the bootstrap process.
 
                 Returns:
                         bootstrap_datasets (list): List with the bootstrap data sets.
         '''
         required_size = int(self.bootstrap_size*len(datasets[0]))
-        for i, p in enumerate(p_arrays):
+        for i in range(len(bootstrap_datasets)):
+            # Fetch the preprocessed dataset and the associated probability distribution
+            p = p_arrays[i % len(p_arrays)]
+            dataset = datasets[i % len(datasets)]
+
+            # Fill the bootstrap dataset up to the desired size
             crnt_size = len(bootstrap_datasets[i])
-            dataset = datasets[i]
-            indexes = [i for i in range(len(dataset))]
-            indexes = np.random.choice(
-                indexes, size=(required_size-crnt_size), replace=True, p=p)
-            bootstrap_datasets[i] = np.concatenate(
-                (bootstrap_datasets[i], dataset[indexes])) if len(bootstrap_datasets[i]) > 0 else dataset[indexes]
+            indexes = np.random.choice([i for i in range(len(dataset))],
+                                       size=(required_size-crnt_size), replace=True, p=p)
+            bootstrap_datasets[i] = concat_datasets(
+                bootstrap_datasets[i], dataset[indexes])
         return bootstrap_datasets
+
+    def __get_p_arrays(self, datasets) -> List:
+        '''
+        Generates the probability distributions for the bootstrapping
+        process. If we use CUSTOM bootstrapping, instances that differs
+        a lot between preprocess datasets will have higher chances of
+        being picked up. If we use DEFAULT boostrapping, simply return 
+        a None array, which is the equivalent of a uniform distribution.
+                Parameters:
+                        datasets: The dataset that will be used for boostrapping.
+                Returns:
+                        p_arrays (list<np.array>): An array of probability distribution per dataset.
+        '''
+        p_arrays = [None for _ in range(len(datasets))]
+        if self.bootstrap_type == Bootstrap_type.CUSTOM:
+            p_arrays = get_avg_dist_arr(datasets)
+            p_arrays = softmax(p_arrays, axis=1).tolist()
+        return p_arrays
+
+    def __get_bootstrap_datasets(self, datasets: np.array, p_array=[]) -> List:
+        '''
+        Generates boostrap datasets using the given datasets. 
+        The boostrapping process uses the probability distribution
+        specified in the p_array.
+                Parameters:
+                        datasets: The dataset used for boostrapping.
+                        p_array: An array containing the probability each instance
+                                 is picked up in the bootstrapping process.
+                Returns:
+                        bootstrap_datasets (list<np.array>): The bootstrap datasets
+        '''
+        b_datasets = [np.array([])
+                      for _ in range(len(datasets)*self.n_datasets)]
+        if self.bootstrap_type == Bootstrap_type.CUSTOM:
+            b_datasets = self.__prefill_bootstrap_datasets(datasets)
+
+        b_datasets = self.__fill_boostrap_datasets(
+            b_datasets, datasets, p_array)
+        return b_datasets
 
     def __bootstrap_datasets(self, datasets: List[Tuple]) -> List[Tuple]:
         '''
-        Generates the bootstrap data sets for bagging. The bootstrap process depends on the self.bootstrap_type attribute.
+        Generates the bootstrap datasets for bagging.
                 Parameters:
-                        dataset
+                        datasets
 
                 Returns:
                         bootstrap_datasets (list<np.array>): The bootstrap data sets
         '''
-
-        datasets = self.__merge_Xyw(datasets)
-        # If we do the custom bootstrapping, we must define a custom PDF
-        if self.bootstrap_type == Bootstrap_type.CUSTOM:
-            dist_arrays = self.__get_avg_dist_arr(datasets)
-            dist_arrays = softmax(dist_arrays, axis=1).tolist()
-            bootstrap_datasets = self.__initialize_bootstrap_datasets(datasets)
-        else:
-            dist_arrays = [None for _ in range(len(datasets))]
-            bootstrap_datasets = [np.array([]) for _ in range(len(datasets))]
-
-        bootstrap_datasets = self.__fill_boostrap_datasets(
-            bootstrap_datasets, datasets, dist_arrays)
-
-        bootstrap_datasets = self.__unmerge_Xy(bootstrap_datasets)
-        return bootstrap_datasets
+        datasets = merge_tuples(datasets)
+        p_arrays = self.__get_p_arrays(datasets)
+        b_datasets = self.__get_bootstrap_datasets(datasets, p_arrays)
+        b_datasets = unmerge_tuples(b_datasets)
+        return b_datasets
 
     def fit(self, dataset: BinaryLabelDataset):
         '''
@@ -215,7 +197,7 @@ class FairBoost(object):
         y_pred = []
         datasets = self.__transform(dataset)
         for i in range(len(self.models)):
-            X, y, _ = datasets[i]
+            X, y, _ = datasets[i % len(datasets)]
             y_pred.append(self.models[i].predict(X))
         # Computing a soft majority voting
         y_pred = np.array(y_pred).transpose()
