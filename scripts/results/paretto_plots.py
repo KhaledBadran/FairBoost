@@ -65,7 +65,8 @@ def read_data() -> Dict:
 def results_to_dataframe(results: Dict, preprocessing_method: str) -> pd.DataFrame:
     """
     Transforms a leaf-level dictionary of the result files into a Dataframe.
-    Saves in the dataframe the preprocessing method name and 1 - abs(1-DI) fairness metric.
+    Saves in the dataframe the preprocessing method name and the normalized
+    disparate impact.
             Parameters:
                     results : The leaf-level dictionary with results.
                     preprocessing_method : name of the preprocessing method.
@@ -76,8 +77,10 @@ def results_to_dataframe(results: Dict, preprocessing_method: str) -> pd.DataFra
     len_ = len(results[list(results.keys())[0]])
     results['preprocessing method'] = [
         str(preprocessing_method) for _ in range(len_)]
-    results['fairness'] = 1 - \
-        np.abs((1-np.array(results['disparate_impact'])))
+    # Computing normalized disparate impact.
+    results['fairness'] = [
+        score if score <= 1 else (score**-1) for score in results['disparate_impact']
+    ]
     return pd.DataFrame.from_dict(results)
 
 
