@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+
 from typeguard import typechecked
 import json
 from typing import List, Dict
 from statistics import harmonic_mean, mean
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 @typechecked
@@ -23,15 +26,15 @@ def read_data_baseline(path: Path) -> List[Dict]:
 
     for dataset, dataset_results in results["results"].items():
         for (
-            preprocessing_method,
-            preprocessing_method_results,
+                preprocessing_method,
+                preprocessing_method_results,
         ) in dataset_results.items():
 
             # Baseline experiment without any preprocessing
             if preprocessing_method == "baseline":
                 for (
-                    classifier,
-                    performance_metrics,
+                        classifier,
+                        performance_metrics,
                 ) in preprocessing_method_results.items():
                     baseline_results.append(
                         {
@@ -64,7 +67,7 @@ def read_data_baseline(path: Path) -> List[Dict]:
 
 @typechecked
 def get_fairboost_run_results(
-    dataset_name: str, raw_run_results: Dict, with_preprocessing: bool
+        dataset_name: str, raw_run_results: Dict, with_preprocessing: bool
 ) -> List[Dict]:
     """
     Analyzes the raw json results of a specific fairboost run and returns the results as a proper list of dictionaries.
@@ -191,6 +194,34 @@ def list_to_string(l: List[str]) -> str:
     """
     return ",".join(map(str, l))
 
+@typechecked
+def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
+    """
+    Preprocesses the dataframe as required by the seaborn library.
+    :param df: dataframe to be preprocessed
+    :param dataset: the dataset name
+    :param classifier: the classifier name
+    :param n_elem: the number of configuration to analyse (e.g 5 means the top 5 configs)
+    :return: the preprocessed dataframe
+    """
+    # select the rows by the classifiers and datasets names
+    preprecessed_df = df.loc[(df["dataset"] == dataset) & (df["classifier"] == classifier)]
+
+    # select the top n_elems having the highest mean of the h_mean
+    preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.mean)
+    preprecessed_df = preprecessed_df.sort_values("Mean")[-n_elem:]
+
+    # Explode the h_mean list to rows
+    preprecessed_df = preprecessed_df.explode("h_mean")
+
+    # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
+    preprecessed_df["(1) experiment/(2) bootstrap_type/ (3)preprocessing"] = \
+        "(1)"+preprecessed_df["experiment"].str.upper() + "\n" \
+        + "(2)"+ preprecessed_df["bootstrap_type"].str.upper() + "\n" \
+        + "(3)" +preprecessed_df["preprocessing"].str.upper()
+
+    return preprecessed_df
+
 
 def main():
     data = read_data()
@@ -205,7 +236,7 @@ def main():
 
         di_score = performance_metric["disparate_impact"]
         normalized_di_score = [
-            score if score <= 1 else (score**-1) for score in di_score
+            score if score <= 1 else (score ** -1) for score in di_score
         ]
 
         h_mean_score = compute_h_mean(f1_score, normalized_di_score)
@@ -216,10 +247,17 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    # save results into csv file
-    output_dir = Path("RQ_results")
-    output_file = Path(output_dir, "RQ1_harmonic_mean_results.csv")
-    df.to_csv(output_file, index=False)
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
+            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
+            fig, ax = plt.subplots(figsize=(10, 8))
+            # sns.set(font_scale=2)
+            plot = sns.boxplot(x="(1) experiment/(2) bootstrap_type/ (3)preprocessing", y="h_mean", data=plot_df,
+                               ax=ax).set(title=plot_title)
+            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".png")
 
 
 if __name__ == "__main__":
