@@ -253,10 +253,12 @@ def main():
         for dataset in datasets_list:
             plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
             plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
-            fig, ax = plt.subplots(figsize=(10, 8))
-            # sns.set(font_scale=2)
+            fig, ax = plt.subplots(figsize=(16, 10))
+            sns.set_context("paper", rc={"font.size": 15, "axes.titlesize": 20, "axes.labelsize": 20})
+
             plot = sns.boxplot(x="(1) experiment/(2) bootstrap_type/ (3)preprocessing", y="h_mean", data=plot_df,
                                ax=ax).set(title=plot_title)
+            # plot.set_xlabel(fontsize=30)
             plt.savefig("Boxplots/" + classifier + "_" + dataset + ".png")
 
 
