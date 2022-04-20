@@ -145,21 +145,21 @@ def get_LFR_hyperparameters_search(dataset_name: Dataset_name):
     if dataset_name == Dataset_name.GERMAN:
         return {
             Preproc_name.LFR: list(ParameterGrid({
-                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 1.0, 10.0], "Az": [0, 0.1, 1.0, ], "k": [5, 10]})),
                 "transform": [{"threshold": 0.5}],
             })),
         }
     elif dataset_name == Dataset_name.ADULT:
         return {
             Preproc_name.LFR: list(ParameterGrid({
-                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 1.0, 10.0], "Az": [0, 0.1, 1.0, ], "k": [5, 10]})),
                 "transform": [{"threshold": 0.5}],
             })),
         }
     elif dataset_name == Dataset_name.COMPASS:
         return {
             Preproc_name.LFR: list(ParameterGrid({
-                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 0.5, 1.0, 5.0, 10.0], "Az": [0, 0.1, 1.0, 50, 100], "k": [5, 10]})),
+                "init": list(ParameterGrid({"Ax": [0.01, 0.1], "Ay": [0.1, 1.0, 10.0], "Az": [0, 0.1, 1.0, ], "k": [5, 10]})),
                 "transform": [{"threshold": 0.5}],
             })),
         }
