@@ -87,10 +87,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            Preproc_name.LFR: [{
-                "init": {"Ax": 0.1, "Ay": 1.0, "Az": 0, "k": 5},
-                "transform": {"threshold": 0.5},
-            }],
+            Preproc_name.LFR: [{'init': {'Ax': 0.1, 'Ay': 1.0, 'Az': 0, 'k': 5}, 'transform': {'threshold': 0.5}}],
             Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
@@ -104,10 +101,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            Preproc_name.LFR: [{
-                "init": {"Ax": 0.01, "Ay": 1.0, "Az": 1.0, "k": 5},
-                "transform": {"threshold": 0.5},
-            }],
+            Preproc_name.LFR: [{'init': {'Ax': 0.1, 'Ay': 1.0, 'Az': 1.0, 'k': 5}, 'transform': {'threshold': 0.5}}],
             Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
@@ -121,10 +115,7 @@ def get_preproc_hyperparameters(dataset_name: Dataset_name) -> Dict:
                     "dlist": [0.1, 0.05, 0],
                 },
             }],
-            Preproc_name.LFR: [{
-                "init": {"Ax": 0.01, "Ay": 10.0, "Az": 1.0, "k": 5},
-                "transform": {"threshold": 0.5},
-            }],
+            Preproc_name.LFR: [{'init': {'Ax': 0.01, 'Ay': 0.1, 'Az': 1.0, 'k': 5}, 'transform': {'threshold': 0.5}}],
             Preproc_name.DisparateImpactRemover: [{"init": {"repair_level": 0.5}}],
             Preproc_name.Reweighing: [{}]
         }
