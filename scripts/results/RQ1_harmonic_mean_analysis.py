@@ -194,6 +194,7 @@ def list_to_string(l: List[str]) -> str:
     """
     return ",".join(map(str, l))
 
+
 @typechecked
 def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
     """
@@ -219,11 +220,75 @@ def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
 
     # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
     preprecessed_df["(1) experiment / (2) bootstrap_type / (3)preprocessing"] = \
-        "(1) "+preprecessed_df["experiment"].str.upper() + "\n" \
-        + "(2) "+ preprecessed_df["bootstrap_type"].str.upper() + "\n" \
-        + "(3) " +preprecessed_df["preprocessing"].str.upper()
+        "(1) " + preprecessed_df["experiment"].str.upper() + "\n" \
+        + "(2) " + preprecessed_df["bootstrap_type"].str.upper() + "\n" \
+        + "(3) " + preprecessed_df["preprocessing"].str.upper()
 
     return preprecessed_df
+
+
+def plot_unique_boxplot(df):
+    """
+    this method will generate a plot for every combination of classifiers and datasets.
+    The plots generated will have the name {classifier}_{dataset}.pdf
+    :param df: the dataframe of the data
+    """
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
+
+            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
+
+            # sns.set(style="darkgrid")
+            fig, ax = plt.subplots(figsize=(16, 13))
+            # ax.set(ylim=(.5, 1))
+
+            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+            # sns.set(font_scale=1)
+
+            PROPS = {
+                'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+                'medianprops': {'color': 'black'},
+                'whiskerprops': {'color': 'black'},
+                'capprops': {'color': 'black'}
+            }
+            plot = sns.boxplot(x="(1) experiment / (2) bootstrap_type / (3)preprocessing", y="h_mean", data=plot_df,
+                               ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS).set(title=plot_title)
+            # plot.set_xlabel(fontsize=30)
+            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".pdf")
+
+
+def plot_multiple_boxplots(df):
+    """
+    this method will generate a plot combining all the combinations of classifiers and datasets.
+    The plots generated will have the name Combined_plots.pdf
+    :param df: the dataframe of the data
+    """
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    frames = []
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
+            frames.append(plot_df)
+
+    results_df = pd.concat(frames)
+    results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean'], axis=1)
+
+    fig, ax = plt.subplots(figsize=(50, 50))
+
+    PROPS = {
+        'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+        'medianprops': {'color': 'black'},
+        'whiskerprops': {'color': 'black'},
+        'capprops': {'color': 'black'}
+    }
+    grid = sns.FacetGrid(results_df, row="classifier", col="dataset", height=4, aspect=2, sharey=False, sharex=False)
+    grid.map(sns.boxplot, "(1) experiment / (2) bootstrap_type / (3)preprocessing", "h_mean", linewidth=1, width=0.5, **PROPS)
+
+    plt.savefig("Boxplots/Combined_plots.pdf")
 
 
 def main():
@@ -250,30 +315,8 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    classifiers_list = df["classifier"].unique()
-    datasets_list = df["dataset"].unique()
-    for classifier in classifiers_list:
-        for dataset in datasets_list:
-            plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
-
-            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
-
-            # sns.set(style="darkgrid")
-            fig, ax = plt.subplots(figsize=(16, 13))
-
-            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
-            # sns.set(font_scale=1)
-
-            PROPS = {
-                'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
-                'medianprops': {'color': 'black'},
-                'whiskerprops': {'color': 'black'},
-                'capprops': {'color': 'black'}
-            }
-            plot = sns.boxplot(x="(1) experiment / (2) bootstrap_type / (3)preprocessing", y="h_mean", data=plot_df,
-                               ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS).set(title=plot_title)
-            # plot.set_xlabel(fontsize=30)
-            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".pdf")
+    plot_unique_boxplot(df)
+    # plot_multiple_boxplots(df)
 
 
 if __name__ == "__main__":
