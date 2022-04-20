@@ -209,16 +209,19 @@ def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
 
     # select the top n_elems having the highest mean of the h_mean
     preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.mean)
-    preprecessed_df = preprecessed_df.sort_values("Mean")[-n_elem:]
+    preprecessed_df = preprecessed_df.sort_values("Mean", ascending=False)[:n_elem]
 
     # Explode the h_mean list to rows
     preprecessed_df = preprecessed_df.explode("h_mean")
 
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("Reweighing", "RW")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("OptimPreproc", "OP")
+
     # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
-    preprecessed_df["(1) experiment/(2) bootstrap_type/ (3)preprocessing"] = \
-        "(1)"+preprecessed_df["experiment"].str.upper() + "\n" \
-        + "(2)"+ preprecessed_df["bootstrap_type"].str.upper() + "\n" \
-        + "(3)" +preprecessed_df["preprocessing"].str.upper()
+    preprecessed_df["(1) experiment / (2) bootstrap_type / (3)preprocessing"] = \
+        "(1) "+preprecessed_df["experiment"].str.upper() + "\n" \
+        + "(2) "+ preprecessed_df["bootstrap_type"].str.upper() + "\n" \
+        + "(3) " +preprecessed_df["preprocessing"].str.upper()
 
     return preprecessed_df
 
@@ -252,14 +255,25 @@ def main():
     for classifier in classifiers_list:
         for dataset in datasets_list:
             plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
-            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
-            fig, ax = plt.subplots(figsize=(16, 10))
-            sns.set_context("paper", rc={"font.size": 15, "axes.titlesize": 20, "axes.labelsize": 20})
 
-            plot = sns.boxplot(x="(1) experiment/(2) bootstrap_type/ (3)preprocessing", y="h_mean", data=plot_df,
-                               ax=ax).set(title=plot_title)
+            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
+
+            # sns.set(style="darkgrid")
+            fig, ax = plt.subplots(figsize=(16, 13))
+
+            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+            # sns.set(font_scale=1)
+
+            PROPS = {
+                'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+                'medianprops': {'color': 'black'},
+                'whiskerprops': {'color': 'black'},
+                'capprops': {'color': 'black'}
+            }
+            plot = sns.boxplot(x="(1) experiment / (2) bootstrap_type / (3)preprocessing", y="h_mean", data=plot_df,
+                               ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS).set(title=plot_title)
             # plot.set_xlabel(fontsize=30)
-            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".png")
+            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".pdf")
 
 
 if __name__ == "__main__":
