@@ -1,7 +1,0 @@
-310,0.8663793103448276,disparate impact out of the established ratio
-260,0.8663793103448276,disparate impact out of the established ratio
-210,0.8663793103448276,disparate impact out of the established ratio
-160,0.8663793103448276,disparate impact out of the established ratio
-110,0.8663793103448276,disparate impact out of the established ratio
-60,0.8663793103448276,disparate impact out of the established ratio
-10,0.8663793103448276,disparate impact out of the established ratio
