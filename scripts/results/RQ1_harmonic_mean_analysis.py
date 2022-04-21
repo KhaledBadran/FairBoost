@@ -209,7 +209,7 @@ def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
     preprecessed_df = df.loc[(df["dataset"] == dataset) & (df["classifier"] == classifier)]
 
     # select the top n_elems having the highest mean of the h_mean
-    preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.mean)
+    preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.median)
     preprecessed_df = preprecessed_df.sort_values("Mean", ascending=False)[:n_elem]
 
     # Explode the h_mean list to rows
@@ -285,10 +285,11 @@ def plot_multiple_boxplots(df):
         'whiskerprops': {'color': 'black'},
         'capprops': {'color': 'black'}
     }
-    grid = sns.FacetGrid(results_df, row="classifier", col="dataset", height=4, aspect=2, sharey=False, sharex=False)
-    grid.map(sns.boxplot, "(1) experiment / (2) bootstrap_type / (3)preprocessing", "h_mean", linewidth=1, width=0.5, **PROPS)
+    grid = sns.FacetGrid(results_df, col="classifier", row="dataset", height=4, aspect=2, sharey=True, sharex=False)
+    grid.map(sns.boxplot, "(1) experiment / (2) bootstrap_type / (3)preprocessing", "h_mean", linewidth=1, width=0.5,
+             **PROPS)
 
-    plt.savefig("Boxplots/Combined_plots.pdf")
+    plt.savefig("Boxplots/Combined_plots_classifier_as_rows_scaled_y.pdf")
 
 
 def main():
@@ -315,8 +316,8 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    plot_unique_boxplot(df)
-    # plot_multiple_boxplots(df)
+    # plot_unique_boxplot(df)
+    plot_multiple_boxplots(df)
 
 
 if __name__ == "__main__":
