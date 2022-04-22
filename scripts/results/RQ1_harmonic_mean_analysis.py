@@ -100,7 +100,8 @@ def get_fairboost_run_results(
         preprocessing_methods = ["No Preprocessing"]
 
         # get the bootstrap method used by the ensemble (None, Default, or Custom)
-        bootstrap_method = raw_run_results["hyperparameters"]["bootstrap_type"].lower()
+        bootstrap_method = raw_run_results["hyperparameters"]["bootstrap_type"].lower(
+        )
 
     # iterate over classifiers to get their performance metrics
     for classifier, performance_metrics in raw_run_results["results"].items():
@@ -162,7 +163,8 @@ def read_data() -> List[Dict]:
             Returns:
                     data: the data contained in both files
     """
-    data_path = Path("raw_data")
+    crnt_dir = Path(__file__).resolve().parent
+    data_path = Path(crnt_dir, "raw_data")
     fairboost_results_path = Path(data_path, "fairboost_splits.json")
     baseline_results_path = Path(data_path, "baseline_splits.json")
     data_baseline = read_data_baseline(baseline_results_path)
@@ -180,7 +182,8 @@ def compute_h_mean(f1_scores: List, normalized_di_scores: List):
     :return: a list of harmonic means for each run
     """
     harmonic_means = list(
-        map(lambda x, y: harmonic_mean([x, y]), f1_scores, normalized_di_scores)
+        map(lambda x, y: harmonic_mean([x, y]),
+            f1_scores, normalized_di_scores)
     )
     return harmonic_means
 
@@ -206,17 +209,21 @@ def preprocess_dataframe(df, dataset: str, classifier: str, n_elem=5):
     :return: the preprocessed dataframe
     """
     # select the rows by the classifiers and datasets names
-    preprecessed_df = df.loc[(df["dataset"] == dataset) & (df["classifier"] == classifier)]
+    preprecessed_df = df.loc[(df["dataset"] == dataset)
+                             & (df["classifier"] == classifier)]
 
     # select the top n_elems having the highest mean of the h_mean
     preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.median)
-    preprecessed_df = preprecessed_df.sort_values("Mean", ascending=False)[:n_elem]
+    preprecessed_df = preprecessed_df.sort_values(
+        "Mean", ascending=False)[:n_elem]
 
     # Explode the h_mean list to rows
     preprecessed_df = preprecessed_df.explode("h_mean")
 
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("Reweighing", "RW")
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("OptimPreproc", "OP")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "Reweighing", "RW")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "OptimPreproc", "OP")
 
     # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
     preprecessed_df["(1) experiment / (2) bootstrap_type / (3)preprocessing"] = \
@@ -238,7 +245,8 @@ def select_configurations(df, dataset: str, classifier: str):
     :return: the preprocessed dataframe
     """
     # select the rows by the classifiers and datasets names
-    preprecessed_df = df.loc[(df["dataset"] == dataset) & (df["classifier"] == classifier)]
+    preprecessed_df = df.loc[(df["dataset"] == dataset)
+                             & (df["classifier"] == classifier)]
 
     # select the top n_elems having the highest mean of the h_mean
     preprecessed_df = preprecessed_df.loc[(preprecessed_df["experiment"] == "preprocessing")
@@ -253,8 +261,10 @@ def select_configurations(df, dataset: str, classifier: str):
     # Explode the h_mean list to rows
     preprecessed_df = preprecessed_df.explode("h_mean")
 
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("Reweighing", "RW")
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("OptimPreproc", "OP")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "Reweighing", "RW")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "OptimPreproc", "OP")
 
     # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
     preprecessed_df["(1) experiment / (2) bootstrap_type / (3)preprocessing"] = \
@@ -296,13 +306,16 @@ def select_fairboost_configs(df, dataset: str, classifier: str, n_elem=5):
 
     # select the top n_elems having the highest mean of the h_mean
     preprecessed_df['Mean'] = preprecessed_df["h_mean"].apply(np.median)
-    preprecessed_df = preprecessed_df.sort_values("Mean", ascending=False)[:n_elem]
+    preprecessed_df = preprecessed_df.sort_values(
+        "Mean", ascending=False)[:n_elem]
 
     # Explode the h_mean list to rows
     preprecessed_df = preprecessed_df.explode("h_mean")
 
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("Reweighing", "RW")
-    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace("OptimPreproc", "OP")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "Reweighing", "RW")
+    preprecessed_df["preprocessing"] = preprecessed_df["preprocessing"].str.replace(
+        "OptimPreproc", "OP")
 
     # Add the column (1) experiment/(2) bootstrap_type/ (3)preprocessing which will be used as the x_axis
     preprecessed_df["(1) bootstrap_type / (2)preprocessing"] = \
@@ -322,15 +335,18 @@ def plot_unique_boxplot(df):
     datasets_list = df["dataset"].unique()
     for classifier in classifiers_list:
         for dataset in datasets_list:
-            plot_df = preprocess_dataframe(df=df, dataset=dataset, classifier=classifier, n_elem=5)
+            plot_df = preprocess_dataframe(
+                df=df, dataset=dataset, classifier=classifier, n_elem=5)
 
-            plot_title = "h_mean distribution of " + classifier + " model \n trained on the dataset " + dataset
+            plot_title = "h_mean distribution of " + classifier + \
+                " model \n trained on the dataset " + dataset
 
             # sns.set(style="darkgrid")
             fig, ax = plt.subplots(figsize=(16, 13))
             # ax.set(ylim=(.5, 1))
 
-            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+            sns.set_context("paper", font_scale=2, rc={
+                            "font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
             # sns.set(font_scale=1)
 
             PROPS = {
@@ -363,12 +379,14 @@ def plot_multiple_boxplots(df):
             # plot_df = select_configurations(df=df, dataset=dataset, classifier=classifier)
 
             # this function plots the configurations of Fairboost
-            plot_df = select_fairboost_configs(df=df, dataset=dataset, classifier=classifier)
+            plot_df = select_fairboost_configs(
+                df=df, dataset=dataset, classifier=classifier)
 
             frames.append(plot_df)
 
     results_df = pd.concat(frames)
-    results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean'], axis=1)
+    results_df = results_df.drop(
+        ['experiment', 'bootstrap_type', 'preprocessing', 'Mean'], axis=1)
 
     fig, ax = plt.subplots(figsize=(50, 50))
 
@@ -378,7 +396,8 @@ def plot_multiple_boxplots(df):
         'whiskerprops': {'color': 'black'},
         'capprops': {'color': 'black'}
     }
-    grid = sns.FacetGrid(results_df, col="classifier", row="dataset", height=3, aspect=4, sharey=True, sharex=False)
+    grid = sns.FacetGrid(results_df, col="classifier", row="dataset",
+                         height=3, aspect=4, sharey=True, sharex=False)
     grid.map(sns.boxplot, "(1) bootstrap_type / (2)preprocessing", "h_mean", linewidth=1, width=0.5,
              **PROPS)
 
