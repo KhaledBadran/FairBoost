@@ -347,7 +347,7 @@ def plot_unique_boxplot(df):
             fig, ax = plt.subplots(figsize=(16, 13))
             # ax.set(ylim=(.5, 1))
 
-            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+            # sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
             # sns.set(font_scale=1)
 
             PROPS = {
@@ -379,9 +379,6 @@ def plot_multiple_boxplots(df):
             # this function plots the baseline, RW, LFR, OP, Fairboost-None, Fairboost-Custom, Fairboost-Default
             plot_df = select_configurations(df=df, dataset=dataset, classifier=classifier)
 
-            # this function plots the configurations of Fairboost
-            # plot_df = select_fairboost_configs(df=df, dataset=dataset, classifier=classifier, n_elem=7)
-
             frames.append(plot_df)
 
     results_df = pd.concat(frames)
@@ -392,8 +389,8 @@ def plot_multiple_boxplots(df):
                        "COMPAS - LOGISTIC REGRESSION", "COMPAS - RANDOM FOREST"]
 
     preprocessing_type = ["BASELINE", "Reweighing \n(RW)", "Learning Fair \n Representations (LFR)",
-                          "Optimized \n Preprocessing \n (OP)","FAIRBOOST : \nNONE\nLFR,OP,RW",
-                          "FAIRBOOST : \nDEFAULT\nLFR,OP,RW","FAIRBOOST : \nCUSTOM\nLFR,OP,RW"]
+                          "Optimized \n Preprocessing \n (OP)", "FAIRBOOST : \nNONE\nLFR,OP,RW",
+                          "FAIRBOOST : \nDEFAULT\nLFR,OP,RW", "FAIRBOOST : \nCUSTOM\nLFR,OP,RW"]
 
     results_df["Dataset - Classifier"] = results_df["Dataset - Classifier"].astype("category")
     results_df["Dataset - Classifier"].cat.set_categories(data_classifier, inplace=True)
@@ -415,13 +412,46 @@ def plot_multiple_boxplots(df):
         'whiskerprops': {'color': 'black'},
         'capprops': {'color': 'black'}
     }
-    # grid = sns.FacetGrid(results_df, col="classifier", row="dataset", height=3, aspect=4, sharey=True, sharex=False)
     grid = sns.FacetGrid(results_df, row="Dataset - Classifier", height=3, aspect=4, sharey=True, sharex=True)
     grid.map(sns.boxplot, "Preprocessing type", "h_mean", linewidth=1, width=0.5,
              **PROPS)
 
-    plt.savefig("Boxplots/Combined_plots_classifier_as_rows_scaled_y_v2.pdf")
-    # plt.savefig("Boxplots/fairboost.pdf")
+    plt.savefig("Boxplots/Combined_plots.pdf")
+
+
+def plot_fairboost_boxplots(df):
+    """
+    this method will generate a plot combining all the combinations of classifiers and datasets for fairboost configs.
+    The plots generated will have the name Combined_plots.pdf
+    :param df: the dataframe of the data
+    """
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    frames = []
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = select_fairboost_configs(df=df, dataset=dataset, classifier=classifier, n_elem=7)
+            frames.append(plot_df)
+
+    results_df = pd.concat(frames)
+
+    # We drop the useless columns
+    results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean'], axis=1)
+
+    # We plot the boxplot
+    fig, ax = plt.subplots(figsize=(50, 50))
+
+    PROPS = {
+        'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+        'medianprops': {'color': 'black'},
+        'whiskerprops': {'color': 'black'},
+        'capprops': {'color': 'black'}
+    }
+    grid = sns.FacetGrid(results_df, col="classifier", row="dataset", height=3, aspect=4, sharey=True, sharex=False)
+    grid.map(sns.boxplot, "(1) bootstrap_type / (2)preprocessing", "h_mean", linewidth=1, width=0.5,
+             **PROPS)
+
+    plt.savefig("Boxplots/fairboost.pdf")
 
 
 def main():
@@ -448,8 +478,14 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    # plot_unique_boxplot(df)
+    # creates a  unique file for every configuration
+    plot_unique_boxplot(df)
+
+    # Creates a file combining all the plots
     plot_multiple_boxplots(df)
+
+    # Creates the fairboost file
+    plot_fairboost_boxplots(df)
 
 
 if __name__ == "__main__":
