@@ -20,7 +20,9 @@ FairBoost_param_grid = {
                       [Preproc_name.OptimPreproc, Preproc_name.LFR],
                       [Preproc_name.OptimPreproc, Preproc_name.Reweighing],
                       [Preproc_name.LFR, Preproc_name.Reweighing],
-                      [Preproc_name.Reweighing, Preproc_name.LFR, Preproc_name.OptimPreproc]]
+                      [Preproc_name.Reweighing, Preproc_name.LFR,
+                       Preproc_name.OptimPreproc]
+                      ]
 }
 
 
