@@ -28,7 +28,7 @@ from utils import save_results, measure_results, merge_results_array
 
 # typechecking
 from typeguard import typechecked
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 np.random.seed(0)
 
@@ -308,6 +308,7 @@ def evaluate_mitigation_techniques(
     dataset: BinaryLabelDataset,
     dataset_name: str,
     dataset_info: dict,
+    seeds: List[int]
 ):
     """
     Run the model using unfairness mitigation techniques while doing hyperparameter tuning.
@@ -317,6 +318,7 @@ def evaluate_mitigation_techniques(
     :param dataset: an AIF360 dataset containing the test examples with their labels
     :param dataset_name: The name of the dataset
     :param dataset_info: information about the dataset including privileged and unprivileged groups
+    :param seeds: seeds used to create the different train_test splits
     :return: The updated results dictionnary
     """
     for (
@@ -333,7 +335,7 @@ def evaluate_mitigation_techniques(
             )
 
             # Splitting dataset over different seeds
-            for seed in SEEDS:
+            for seed in seeds:
                 train_split, test_split = dataset.split(
                     [0.7], shuffle=True, seed=seed)
                 # Transforming datasets with unfairness mitigation technique
@@ -381,7 +383,7 @@ def main():
 
         print(f"\n\n---------- Unfairness Mitigation techniques ----------")
         results = evaluate_mitigation_techniques(
-            results, dataset, dataset_name, dataset_info)
+            results, dataset, dataset_name, dataset_info, seeds=SEEDS)
 
     # save the results to file
     experiment_details = {
