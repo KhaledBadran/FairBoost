@@ -150,11 +150,13 @@ def read_data() -> Dict:
 @typechecked
 def plot_all(plots: List, plots_title: List, nb_col=2, plots_dir=Path("plots/"), print_figures=False):
     """
-    Plots the rectangles plots.
+    Plots the rectangles plots in one figure.
             Parameters:
-                    data : List of preprocessing dicts.
-            Returns:
-                    g (ggplot): returns the plot
+                    plots : List of plots to merge in one figure
+                    plots_title: Title of each plot
+                    nb_col: The number of columns in the figure
+                    plots_dir: Where to save the figure
+                    print_figures: Whether to print the figures or not
     """
     nb_row = ceil(len(plots)/2)
 
