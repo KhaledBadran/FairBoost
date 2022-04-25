@@ -298,7 +298,7 @@ def select_configurations(df, dataset: str, classifier: str):
 
 
 @typechecked
-def select_fairboost_configs(df, dataset: str, classifier: str, n_elem=5):
+def select_fairboost_configs(df, dataset: str, classifier: str, n_elem):
     """
     Selects and preprocesses the dataframe of Fairboost configs.
     :param df: dataframe to be preprocessed
@@ -362,11 +362,12 @@ def plot_unique_boxplot(df):
             plt.savefig("Boxplots/" + classifier + "_" + dataset + ".pdf")
 
 
-def plot_multiple_boxplots(df):
+def plot_multiple_boxplots(df, scale_y=True):
     """
     this method will generate a plot combining all the combinations of classifiers and datasets.
     The plots generated will have the name Combined_plots.pdf
     :param df: the dataframe of the data
+    :param scale_y: a boolean indicating if we should scale y axis or not
     """
     classifiers_list = df["classifier"].unique()
     datasets_list = df["dataset"].unique()
@@ -412,11 +413,58 @@ def plot_multiple_boxplots(df):
         'whiskerprops': {'color': 'black'},
         'capprops': {'color': 'black'}
     }
-    grid = sns.FacetGrid(results_df, row="Dataset - Classifier", height=3, aspect=4, sharey=True, sharex=True)
+    grid = sns.FacetGrid(results_df, row="Dataset - Classifier", height=3, aspect=4, sharey=scale_y, sharex=True)
     grid.map(sns.boxplot, "Preprocessing type", "h_mean", linewidth=1, width=0.5,
              **PROPS)
 
     plt.savefig("Boxplots/Combined_plots.pdf")
+
+
+def plot_merged_boxplot(df):
+    """
+    this method will generate a single plot combining all the combinations of classifiers and datasets by merging the
+    h_mean of the data
+    :param df: the dataframe of the data
+    """
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    frames = []
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = select_configurations(df=df, dataset=dataset, classifier=classifier)
+
+            frames.append(plot_df)
+
+    results_df = pd.concat(frames)
+
+    preprocessing_type = ["BASELINE", "Reweighing \n(RW)", "Learning Fair \n Representations (LFR)",
+                          "Optimized \n Preprocessing \n (OP)", "FAIRBOOST : \nNONE\nLFR,OP,RW",
+                          "FAIRBOOST : \nDEFAULT\nLFR,OP,RW", "FAIRBOOST : \nCUSTOM\nLFR,OP,RW"]
+
+    results_df["Preprocessing type"] = results_df["Preprocessing type"].astype("category")
+    results_df["Preprocessing type"].cat.set_categories(preprocessing_type, inplace=True)
+
+    results_df = results_df.sort_values(["Preprocessing type"])
+
+    # We drop the useless columns
+    results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean', "Dataset - Classifier"],
+                                 axis=1)
+
+    # We plot the boxplot
+    fig, ax = plt.subplots(figsize=(16, 13))
+    # sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+    # sns.set(font_scale=1)
+    PROPS = {
+        'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+        'medianprops': {'color': 'black'},
+        'whiskerprops': {'color': 'black'},
+        'capprops': {'color': 'black'}
+    }
+
+    plot = sns.boxplot(x="Preprocessing type", y="h_mean", data=results_df, showfliers=False, ax=ax, linewidth=3,
+                       width=0.5, **PROPS)
+
+    plt.savefig("Boxplots/Merged_plots.pdf")
 
 
 def plot_fairboost_boxplots(df):
@@ -454,6 +502,38 @@ def plot_fairboost_boxplots(df):
     plt.savefig("Boxplots/fairboost.pdf")
 
 
+def plot_unique_fairboost_boxplots(df):
+    """
+    this method will generate a plot for every combination of classifiers and datasets for fairboost configurations.
+    The plots generated will have the name fairboost_{classifier}_{dataset}.pdf
+    :param df: the dataframe of the data
+    """
+    classifiers_list = df["classifier"].unique()
+    datasets_list = df["dataset"].unique()
+    frames = []
+    for classifier in classifiers_list:
+        for dataset in datasets_list:
+            plot_df = select_fairboost_configs(df=df, dataset=dataset, classifier=classifier, n_elem=8)
+            frames.append(plot_df)
+
+            fig, ax = plt.subplots(figsize=(16, 13))
+            # ax.set(ylim=(.5, 1))
+
+            sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+            # sns.set(font_scale=1)
+
+            PROPS = {
+                'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+                'medianprops': {'color': 'black'},
+                'whiskerprops': {'color': 'black'},
+                'capprops': {'color': 'black'}
+            }
+            plot = sns.boxplot(x="(1) bootstrap_type / (2)preprocessing", y="h_mean", data=plot_df,
+                               ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS)
+            # plot.set_xlabel(fontsize=30)
+            plt.savefig("Boxplots/fairboost_" + classifier + "_" + dataset + ".pdf")
+
+
 def main():
     data = read_data()
     df = pd.DataFrame(data)
@@ -478,14 +558,20 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    # creates a  unique file for every configuration
-    plot_unique_boxplot(df)
+    # Create the combined boxplot
+    plot_merged_boxplot(df)
+
+    # Creates a  unique file for every configuration
+    # plot_unique_boxplot(df)
 
     # Creates a file combining all the plots
-    plot_multiple_boxplots(df)
+    # plot_multiple_boxplots(df, scale_y=False)
 
     # Creates the fairboost file
-    plot_fairboost_boxplots(df)
+    # plot_fairboost_boxplots(df)
+
+    #  Creates a  unique file for every fairboost configuration
+    # plot_unique_fairboost_boxplots(df)
 
 
 if __name__ == "__main__":
