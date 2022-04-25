@@ -6,11 +6,10 @@ import numpy as np
 from pathlib import Path
 import plotnine as pn
 from typeguard import typechecked
+from math import ceil
+import os
 
-
-
-import seaborn as sns
-import matplotlib.pyplot as  plt
+import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 
@@ -149,7 +148,7 @@ def read_data() -> Dict:
     return {**data_baseline, **data_fairboost}
 
 @typechecked
-def rectangular_plot_all(data: Dict, dataset_names=[], classifier_names=[], print_figures=False, plots_dir=Path("plots/")):
+def plot_all(plots: List, nb_col=2, plots_dir=Path("plots/"), print_figures=False):
     """
     Plots the rectangles plots.
             Parameters:
@@ -157,63 +156,25 @@ def rectangular_plot_all(data: Dict, dataset_names=[], classifier_names=[], prin
             Returns:
                     g (ggplot): returns the plot
     """
-    
-    plots_  = []
-    plots_t = []
-    for dataset in dataset_names:
-        for classifier in classifier_names:
-            dataframe = to_dataframe(data, dataset_name=dataset, classifier_name=classifier)
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : adult-baseline-Logistic Regression-NONE']  
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : german-baseline-Logistic Regression-NONE']  
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : compas-baseline-Logistic Regression-NONE']  
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : german-baseline-Random Forest-NONE']  
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : adult-baseline-Random Forest-NONE']  
-            dataframe = dataframe.loc[dataframe['t']!='Fairboost : compas-baseline-Random Forest-NONE']  
-            dataframe['t'] = dataframe['t'].str.replace("compas-", " " )
-            dataframe['t'] = dataframe['t'].str.replace("adult-", " " )
-            dataframe['t'] = dataframe['t'].str.replace("german-", " " )
-            dataframe['t'] = dataframe['t'].str.replace("-Random Forest", " " )
-            dataframe['t'] = dataframe['t'].str.replace("-Logistic Regression", " " )
-            #dataframe['t'] = dataframe['t'].apply(lambda x: re.sub('compas-$','xxxx',x))
+    nb_row = ceil(len(plots)/2)
 
-            
-            plot_title = "Stability of the accuracy and fairness of \n" + \
-                     classifier + " trained on " + dataset + " dataset"
-            g = (pn.ggplot(dataframe)
-                + pn.scale_x_continuous(name="accuracy")
-                + pn.scale_y_continuous(name="fairness")
-                + pn.geom_rect(data=dataframe, mapping=pn.aes(xmin=dataframe["x1"], xmax=dataframe["x2"], ymin=dataframe["y1"],
-                                                       ymax=dataframe["y2"], fill=dataframe["t"]), color="black", alpha=0.3)
-                + pn.labs(title=plot_title, fill='Preprocessing')
-                + pn.theme(legend_margin=-2, legend_box_spacing=0, text=pn.element_text(size=7))
-                )
-            plots_.append(g)
-            plots_t.append(plot_title)
-         
-    fig = (pn.ggplot()+pn.geom_blank(data=dataframe)+pn.theme_void()+pn.theme(figure_size=(11,8))+
-    pn.theme(legend_margin=-2, legend_box_spacing=0)).draw()
-    plt.subplots_adjust(left=0.1, bottom=0.1, right=0.80, top=0.9, wspace=0.4, hspace=0.5)
-    gs = gridspec.GridSpec(3,2)
-    fig_rows = 3
-    fig_cols = 2 
-    nb_figs = 6
-    i = 1
-    for r in range(0, fig_rows):
-        for c in range(0, fig_cols):
-            locals()['ax'+ str(i)] = fig.add_subplot(gs[r,c])
-            i+=1
-       
-    for i in range(0 , nb_figs ):
-       locals()['ax'+ str(i+1)].set_xlabel('Accuracy', fontsize=7)
-       locals()['ax'+ str(i+1)].set_ylabel('Fairness', fontsize=7)
-       locals()['ax'+ str(i+1)].set_title(plots_t[i], fontsize=7)
-       _ = plots_[i]._draw_using_figure(fig, [locals()['ax'+ str(i+1)]])
-        
+    fig = (pn.ggplot()+pn.geom_blank()+pn.theme_void()+pn.theme(figure_size=(11, 8)) +
+           pn.theme(legend_margin=-2, legend_box_spacing=0)).draw()
+    plt.subplots_adjust(left=0.1, bottom=0.1, right=0.80,
+                        top=0.9, wspace=0.4, hspace=0.5)
+    gs = gridspec.GridSpec(nb_row, nb_col)
+
+    for i, plot in enumerate(plots):
+        r = i // nb_col
+        c = i % nb_col
+        p = fig.add_subplot(gs[r, c])
+        _ = plot._draw_using_figure(fig, [p])
+
     file_name = f'rectangular-all.pdf'
     file_path = Path(plots_dir, file_name)
     fig.savefig(file_path, orientation='portrait')
-    #not supported in version >= 3.6
-    #fig.savefig(file_path, orientation='portrait')#, papertype='legal') 
+    if print_figures:
+        print(fig)
 
 @typechecked
 def add_normalized_di(data: Dict):
@@ -232,21 +193,27 @@ def add_normalized_di(data: Dict):
         ]
     return data
 
+def get_rectangular_plot_dir():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    plots_dir = Path(dir_path, "plots", 'rectangular')
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    return plots_dir
 
 def main():
     data = read_data()
     data = add_normalized_di(data)
+    
+    plots = []
+    plots_dir = get_rectangular_plot_dir()
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
-            rectangular_plot(data, dataset_name=dataset,
-                             classifier_name=classifier, print_figures=False)
-
-    rectangular_plot_all(data, dataset_names=datasets,
-                             classifier_names=classifiers, print_figures=False)
-
+            p = rectangular_plot(data, dataset_name=dataset,
+                                 classifier_name=classifier, print_figures=False, plots_dir=plots_dir)
+            plots.append(p)
+    plot_all(plots, plots_dir=plots_dir)
 
 
 if __name__ == '__main__':
