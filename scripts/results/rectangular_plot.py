@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import pandas as pd
 import numpy as np
@@ -96,7 +96,7 @@ def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
 
 
 @typechecked
-def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figures=False, plots_dir=Path("plots/")):
+def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figures=False, plots_dir=Path("plots/")) -> Tuple:
     """
     Plots the rectangles plots.
             Parameters:
@@ -129,7 +129,7 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
     file_name = f'rectangular-{dataset_name}-{classifier_name}.pdf'
     file_path = Path(plots_dir, file_name)
     g.save(file_path)
-    return g
+    return g, plot_title
 
 
 @typechecked
@@ -148,7 +148,7 @@ def read_data() -> Dict:
     return {**data_baseline, **data_fairboost}
 
 @typechecked
-def plot_all(plots: List, nb_col=2, plots_dir=Path("plots/"), print_figures=False):
+def plot_all(plots: List, plots_title: List, nb_col=2, plots_dir=Path("plots/"), print_figures=False):
     """
     Plots the rectangles plots.
             Parameters:
@@ -164,10 +164,13 @@ def plot_all(plots: List, nb_col=2, plots_dir=Path("plots/"), print_figures=Fals
                         top=0.9, wspace=0.4, hspace=0.5)
     gs = gridspec.GridSpec(nb_row, nb_col)
 
-    for i, plot in enumerate(plots):
+    for i, (plot, plot_title) in enumerate(zip(plots,plots_title)):
         r = i // nb_col
         c = i % nb_col
         p = fig.add_subplot(gs[r, c])
+        p.set_xlabel('Accuracy', fontsize=7)
+        p.set_ylabel('Fairness', fontsize=7)
+        p.set_title(plot_title, fontsize=7)
         _ = plot._draw_using_figure(fig, [p])
 
     file_name = f'rectangular-all.pdf'
@@ -203,17 +206,18 @@ def main():
     data = read_data()
     data = add_normalized_di(data)
     
-    plots = []
+    plots, plots_title = [], []
     plots_dir = get_rectangular_plot_dir()
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
-            p = rectangular_plot(data, dataset_name=dataset,
+            p, p_t = rectangular_plot(data, dataset_name=dataset,
                                  classifier_name=classifier, print_figures=False, plots_dir=plots_dir)
             plots.append(p)
-    plot_all(plots, plots_dir=plots_dir)
+            plots_title.append(p_t)
+    plot_all(plots, plots_title, plots_dir=plots_dir)
 
 
 if __name__ == '__main__':
