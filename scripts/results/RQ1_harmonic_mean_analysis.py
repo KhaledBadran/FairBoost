@@ -405,7 +405,7 @@ def plot_multiple_boxplots(df, scale_y=True):
     results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean'], axis=1)
 
     # We plot the boxplot
-    fig, ax = plt.subplots(figsize=(50, 50))
+    fig, ax = plt.subplots(figsize=(50, 40))
 
     PROPS = {
         'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
@@ -437,34 +437,51 @@ def plot_merged_boxplot(df):
 
     results_df = pd.concat(frames)
 
-    preprocessing_type = ["BASELINE", "Reweighing \n(RW)", "Learning Fair \n Representations (LFR)",
-                          "Optimized \n Preprocessing \n (OP)", "FAIRBOOST : \nNONE\nLFR,OP,RW",
-                          "FAIRBOOST : \nDEFAULT\nLFR,OP,RW", "FAIRBOOST : \nCUSTOM\nLFR,OP,RW"]
+    fig, ax = plt.subplots(figsize=(25, 12))
+    # ax.set(ylim=(.5, 1))
 
-    results_df["Preprocessing type"] = results_df["Preprocessing type"].astype("category")
-    results_df["Preprocessing type"].cat.set_categories(preprocessing_type, inplace=True)
-
-    results_df = results_df.sort_values(["Preprocessing type"])
-
-    # We drop the useless columns
-    results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean', "Dataset - Classifier"],
-                                 axis=1)
-
-    # We plot the boxplot
-    fig, ax = plt.subplots(figsize=(16, 13))
-    # sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+    sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
     # sns.set(font_scale=1)
+
     PROPS = {
         'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
         'medianprops': {'color': 'black'},
         'whiskerprops': {'color': 'black'},
         'capprops': {'color': 'black'}
     }
-
-    plot = sns.boxplot(x="Preprocessing type", y="h_mean", data=results_df, showfliers=False, ax=ax, linewidth=3,
-                       width=0.5, **PROPS)
-
+    plot = sns.boxplot(x="Preprocessing type", y="h_mean", data=results_df,
+                       ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS)
+    # plot.set_xlabel(fontsize=30)
     plt.savefig("Boxplots/Merged_plots.pdf")
+
+    # preprocessing_type = ["BASELINE", "Reweighing \n(RW)", "Learning Fair \n Representations (LFR)",
+    #                       "Optimized \n Preprocessing \n (OP)", "FAIRBOOST : \nNONE\nLFR,OP,RW",
+    #                       "FAIRBOOST : \nDEFAULT\nLFR,OP,RW", "FAIRBOOST : \nCUSTOM\nLFR,OP,RW"]
+    #
+    # results_df["Preprocessing type"] = results_df["Preprocessing type"].astype("category")
+    # results_df["Preprocessing type"].cat.set_categories(preprocessing_type, inplace=True)
+    #
+    # results_df = results_df.sort_values(["Preprocessing type"])
+    #
+    # # We drop the useless columns
+    # results_df = results_df.drop(['experiment', 'bootstrap_type', 'preprocessing', 'Mean', "Dataset - Classifier"],
+    #                              axis=1)
+    #
+    # # We plot the boxplot
+    # fig, ax = plt.subplots(figsize=(16, 13))
+    # sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
+    # # sns.set(font_scale=1)
+    # PROPS = {
+    #     'boxprops': {'facecolor': 'none', 'edgecolor': 'black'},
+    #     'medianprops': {'color': 'black'},
+    #     'whiskerprops': {'color': 'black'},
+    #     'capprops': {'color': 'black'}
+    # }
+    #
+    # plot = sns.boxplot(x="Preprocessing type", y="h_mean", data=results_df, showfliers=False, ax=ax, linewidth=3,
+    #                    width=0.5, **PROPS)
+    #
+    # plt.savefig("Boxplots/Merged_plots.pdf")
 
 
 def plot_fairboost_boxplots(df):
@@ -516,7 +533,8 @@ def plot_unique_fairboost_boxplots(df):
             plot_df = select_fairboost_configs(df=df, dataset=dataset, classifier=classifier, n_elem=8)
             frames.append(plot_df)
 
-            fig, ax = plt.subplots(figsize=(16, 13))
+            # fig, ax = plt.subplots(figsize=(16, 13))
+            fig, ax = plt.subplots(figsize=(25, 12))
             # ax.set(ylim=(.5, 1))
 
             sns.set_context("paper", font_scale=2, rc={"font.size": 20, "axes.titlesize": 20, "axes.labelsize": 20})
@@ -558,20 +576,20 @@ def main():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
 
-    # Create the combined boxplot
-    plot_merged_boxplot(df)
-
     # Creates a  unique file for every configuration
-    # plot_unique_boxplot(df)
+    plot_unique_boxplot(df)
 
     # Creates a file combining all the plots
-    # plot_multiple_boxplots(df, scale_y=False)
+    plot_multiple_boxplots(df, scale_y=False)
 
     # Creates the fairboost file
-    # plot_fairboost_boxplots(df)
+    plot_fairboost_boxplots(df)
 
     #  Creates a  unique file for every fairboost configuration
-    # plot_unique_fairboost_boxplots(df)
+    plot_unique_fairboost_boxplots(df)
+
+    # Create the combined boxplot
+    plot_merged_boxplot(df)
 
 
 if __name__ == "__main__":
