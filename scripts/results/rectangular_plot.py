@@ -78,9 +78,9 @@ def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
     for key, value in data.items():
         if (dataset_name in key) and (classifier_name in key):
             mean_accuracy = np.mean(value["accuracy"])
-            mean_fairness = np.mean(value["disparate_impact"])
+            mean_fairness = np.mean(value["n_disparate_impact"])
             std_accuracy = np.std(value["accuracy"])
-            std_fairness = np.std(value["disparate_impact"])
+            std_fairness = np.std(value["n_disparate_impact"])
             x1.append(mean_accuracy - (std_accuracy / 2))
             x2.append(mean_accuracy + (std_accuracy / 2))
             y1.append(mean_fairness - (std_fairness / 2))
@@ -143,8 +143,27 @@ def read_data() -> Dict:
     return {**data_baseline, **data_fairboost}
 
 
+@typechecked
+def add_normalized_di(data: Dict):
+    """
+    Measures and adds the normalized disparate impact to
+    the data dictionnary. For further information on 
+    normalized disparate impact, refer to our paper.
+            Parameters:
+                    data : List of preprocessing dicts.
+            Returns:
+                    data: Data augmented with normalized disparate impact
+    """
+    for key in data:
+        data[key]['n_disparate_impact'] = [
+            score if score <= 1 else (score**-1) for score in data[key]['disparate_impact']
+        ]
+    return data
+
+
 def main():
     data = read_data()
+    data = add_normalized_di(data)
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]

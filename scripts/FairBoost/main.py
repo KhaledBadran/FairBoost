@@ -22,7 +22,7 @@ class FairBoost(object):
     def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
         """
                 Parameters:
-                        model:  The model that will be used by Faiboost.
+                        model:  The model that will be used by Fairboost.
                                 Should follow sklearn API (fit and transform functions)
                         preprocessing_functions: The unfairness mitigation techniques.
                         bootstrap_type: The type of boostraping (including not doing any).
@@ -113,7 +113,7 @@ class FairBoost(object):
                 bootstrap_datasets[i], dataset[indexes])
         return bootstrap_datasets
 
-    def __get_p_arrays(self, datasets) -> List:
+    def __get_p_arrays(self, datasets: np.array) -> List:
         '''
         Generates the probability distributions for the bootstrapping
         process. If we use CUSTOM bootstrapping, instances that differs
@@ -126,7 +126,7 @@ class FairBoost(object):
                         p_arrays (list<np.array>): An array of probability distribution per dataset.
         '''
         p_arrays = [None for _ in range(len(datasets))]
-        if self.bootstrap_type == Bootstrap_type.CUSTOM:
+        if self.bootstrap_type == Bootstrap_type.CUSTOM and datasets.shape[0] > 1:
             p_arrays = get_avg_dist_arr(datasets)
             p_arrays = softmax(p_arrays, axis=1).tolist()
         return p_arrays
