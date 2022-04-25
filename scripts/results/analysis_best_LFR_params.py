@@ -5,6 +5,7 @@ from typeguard import typechecked
 import json
 from typing import List, Dict
 from statistics import harmonic_mean, mean
+import os
 
 @typechecked
 def read_data_LFR_evaluation(path: Path) -> List[Dict]:
@@ -50,6 +51,14 @@ def calculate_h_mean(f1_list: List, di_list: List) -> List:
         map(lambda x, y: harmonic_mean([x, y]), f1_list, di_list)
     )
 
+
+def save_best_params(df):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    results_dir = Path(dir_path, "LFR_best_params")
+    results_dir.mkdir(parents=True, exist_ok=True)
+    results_file = Path(results_dir, "LFR_best_params.csv")
+    df.to_csv(results_file)
+
 def main():
 
     data_path = Path("raw_data")
@@ -82,9 +91,7 @@ def main():
     df = df.sort_values('avg_h_mean', ascending=False).groupby(['dataset'], sort=False).head(1)
 
     # save results
-    results_folder = Path('LFR_best_params')
-    results_file = Path(results_folder, "LFR_best_params.csv")
-    df.to_csv(results_file)
+    save_best_params(df)
 
 if __name__ == "__main__":
     main()
