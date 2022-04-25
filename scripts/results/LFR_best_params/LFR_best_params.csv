@@ -1,4 +1,0 @@
-,dataset,params,avg_h_mean
-87,german,"{'init': {'Ax': 0.1, 'Ay': 1.0, 'Az': 0, 'k': 5}, 'transform': {'threshold': 0.5}}",0.9070247789952106
-38,compas,"{'init': {'Ax': 0.01, 'Ay': 0.1, 'Az': 1.0, 'k': 5}, 'transform': {'threshold': 0.5}}",0.8033154034839272
-27,adult,"{'init': {'Ax': 0.1, 'Ay': 1.0, 'Az': 1.0, 'k': 5}, 'transform': {'threshold': 0.5}}",0.5661369913364016
