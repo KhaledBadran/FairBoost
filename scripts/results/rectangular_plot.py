@@ -1,9 +1,9 @@
 import json
 from typing import List, Dict
-
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import os
 import plotnine as pn
 from typeguard import typechecked
 
@@ -120,9 +120,8 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
     if print_figures:
         print(g)
     # Save the plots
-    plots_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f'rectangular-{dataset_name}-{classifier_name}.pdf'
-    file_path = Path(plots_dir, file_name)
+    file_name = f'{dataset_name}-{classifier_name}.pdf'
+    file_path = plots_dir/file_name
     g.save(file_path)
     return g
 
@@ -160,17 +159,24 @@ def add_normalized_di(data: Dict):
         ]
     return data
 
+def get_rectangular_plot_dir():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    results_dir = Path(dir_path, "plots", "rectangular_plot")
+    results_dir.mkdir(parents=True, exist_ok=True)
+    return results_dir
+
 
 def main():
     data = read_data()
     data = add_normalized_di(data)
+    plots_dir = get_rectangular_plot_dir()
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
             rectangular_plot(data, dataset_name=dataset,
-                             classifier_name=classifier, print_figures=False)
+                             classifier_name=classifier, print_figures=False, plots_dir=plots_dir)
 
 
 if __name__ == '__main__':
