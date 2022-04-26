@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 
-from utils import get_data_h_mean
+from utils import get_data_h_mean, get_plots_dir
 
 
 @typechecked
@@ -395,31 +395,25 @@ def plot_unique_fairboost_boxplots(df, plots_dir=Path("plots/")):
             # plot.set_xlabel(fontsize=30)
             plt.savefig(plots_dir/f"fairboost_{classifier}_{dataset}.pdf")
 
-def get_boxplot_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    results_dir = Path(dir_path, "plots", "boxplots")
-    results_dir.mkdir(parents=True, exist_ok=True)
-    return results_dir
-
 
 def main():
-    df = get_data_h_mean()
-    boxplot_dir = get_boxplot_dir()
+    df = get_data_h_mean() 
+    plots_dir = get_plots_dir("boxplots")
     
     # Creates a  unique file for every configuration
-    plot_unique_boxplot(df, plots_dir=boxplot_dir)
+    plot_unique_boxplot(df, plots_dir=plots_dir)
 
     # Creates a file combining all the plots
-    plot_multiple_boxplots(df, scale_y=False, plots_dir=boxplot_dir)
+    plot_multiple_boxplots(df, scale_y=False, plots_dir=plots_dir)
 
     # Creates the fairboost file
-    plot_fairboost_boxplots(df, plots_dir=boxplot_dir)
+    plot_fairboost_boxplots(df, plots_dir=plots_dir)
 
     #  Creates a  unique file for every fairboost configuration
-    plot_unique_fairboost_boxplots(df, plots_dir=boxplot_dir)
+    plot_unique_fairboost_boxplots(df, plots_dir=plots_dir)
 
     # Create the combined boxplot
-    plot_merged_boxplot(df, plots_dir=boxplot_dir)
+    plot_merged_boxplot(df, plots_dir=plots_dir)
 
 
 if __name__ == "__main__":

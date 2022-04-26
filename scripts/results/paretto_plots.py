@@ -9,6 +9,8 @@ import enum
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from utils import get_plots_dir
+
 
 class Preprocessing_names(str, enum.Enum):
     def __str__(self):
@@ -212,18 +214,11 @@ def pareto_frontier(X: np.array, Y: np.array, optimizeX=True, optimizeY=True) ->
 
     return p_frontX, p_frontY
 
-def get_paretto_plot_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    results_dir = Path(dir_path, "plots", "paretto_plots")
-    results_dir.mkdir(parents=True, exist_ok=True)
-    return results_dir
-
-
 def main():
     data = read_data()
     dataset_names = ['german', 'adult', 'compas']
     model_names = ['Logistic Regression', 'Random Forest']
-    plots_dir = get_paretto_plot_dir()
+    plots_dir = get_plots_dir('paretto_plots')
 
     for dataset_name in dataset_names:
         for model_name in model_names:

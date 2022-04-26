@@ -7,6 +7,8 @@ import os
 import plotnine as pn
 from typeguard import typechecked
 
+from utils import get_plots_dir
+
 
 def read_data_baseline(path):
     """
@@ -159,17 +161,11 @@ def add_normalized_di(data: Dict):
         ]
     return data
 
-def get_rectangular_plot_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    results_dir = Path(dir_path, "plots", "rectangular_plot")
-    results_dir.mkdir(parents=True, exist_ok=True)
-    return results_dir
-
 
 def main():
     data = read_data()
     data = add_normalized_di(data)
-    plots_dir = get_rectangular_plot_dir()
+    plots_dir = get_plots_dir("rectangular_plot")
 
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
