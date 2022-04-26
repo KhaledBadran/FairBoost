@@ -1,6 +1,6 @@
 import json
 from typing import List, Dict, Tuple
-
+import os
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -8,6 +8,8 @@ from typeguard import typechecked
 import enum
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+from utils import get_plots_dir
 
 
 class Preprocessing_names(str, enum.Enum):
@@ -177,10 +179,9 @@ def plot_paretto_front(df: pd.DataFrame, dataset_name: str, classifier_name: str
     if print_figures:
         plt.show()
 
-    plots_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f"paretto-{dataset_name}-{classifier_name}.pdf"
-    file_path = Path(plots_dir, file_name)
-    p.figure.savefig(file_path)
+    file_name = f"{dataset_name}-{classifier_name}.pdf"
+    file_path = plots_dir/file_name
+    p.figure.savefig(str(file_path))
 
 
 @typechecked
@@ -213,16 +214,16 @@ def pareto_frontier(X: np.array, Y: np.array, optimizeX=True, optimizeY=True) ->
 
     return p_frontX, p_frontY
 
-
 def main():
     data = read_data()
     dataset_names = ['german', 'adult', 'compas']
     model_names = ['Logistic Regression', 'Random Forest']
+    plots_dir = get_plots_dir('paretto_plots')
 
     for dataset_name in dataset_names:
         for model_name in model_names:
             df = to_dataframe(data, dataset_name, model_name)
-            plot_paretto_front(df, dataset_name, model_name)
+            plot_paretto_front(df, dataset_name, model_name, plots_dir=plots_dir)
 
 
 if __name__ == '__main__':

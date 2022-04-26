@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-
+import os
 from typeguard import typechecked
 import json
 from typing import List, Dict
@@ -222,3 +222,10 @@ def get_data_h_mean():
     # drop the metrics column to apply aggregation afterwards
     df.drop(["metrics"], axis=1, inplace=True)
     return df
+
+@typechecked
+def get_plots_dir(dir_name: str) -> Path:
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    results_dir = Path(dir_path, "plots", dir_name)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    return results_dir

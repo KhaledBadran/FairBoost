@@ -3,8 +3,10 @@ import numpy as np
 from typeguard import typechecked
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
-from utils import get_data_h_mean
+from utils import get_data_h_mean, get_plots_dir
 
 
 @typechecked
@@ -154,7 +156,7 @@ def select_fairboost_configs(df, dataset: str, classifier: str, n_elem):
     return preprecessed_df
 
 
-def plot_unique_boxplot(df):
+def plot_unique_boxplot(df, plots_dir=Path("plots/")):
     """
     this method will generate a plot for every combination of classifiers and datasets.
     The plots generated will have the name {classifier}_{dataset}.pdf
@@ -186,10 +188,10 @@ def plot_unique_boxplot(df):
             plot = sns.boxplot(x="(1) experiment / (2) bootstrap_type / (3)preprocessing", y="h_mean", data=plot_df,
                                ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS).set(title=plot_title)
             # plot.set_xlabel(fontsize=30)
-            plt.savefig("Boxplots/" + classifier + "_" + dataset + ".pdf")
+            plt.savefig(plots_dir/f"{classifier}_{dataset}.pdf")
 
 
-def plot_multiple_boxplots(df, scale_y=True):
+def plot_multiple_boxplots(df, scale_y=True, plots_dir=Path("plots/")):
     """
     this method will generate a plot combining all the combinations of classifiers and datasets.
     The plots generated will have the name Combined_plots.pdf
@@ -252,10 +254,10 @@ def plot_multiple_boxplots(df, scale_y=True):
     grid.map(sns.boxplot, "Preprocessing type", "h_mean", linewidth=1, width=0.5,
              **PROPS)
 
-    plt.savefig("Boxplots/Combined_plots.pdf")
+    plt.savefig(plots_dir/"Combined_plots.pdf")
 
 
-def plot_merged_boxplot(df):
+def plot_merged_boxplot(df, plots_dir=Path("plots/")):
     """
     this method will generate a single plot combining all the combinations of classifiers and datasets by merging the
     h_mean of the data
@@ -289,7 +291,7 @@ def plot_merged_boxplot(df):
     plot = sns.boxplot(x="Preprocessing type", y="h_mean", data=results_df,
                        ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS)
     # plot.set_xlabel(fontsize=30)
-    plt.savefig("Boxplots/Merged_plots.pdf")
+    plt.savefig(plots_dir/"Merged_plots.pdf")
 
     # preprocessing_type = ["BASELINE", "Reweighing \n(RW)", "Learning Fair \n Representations (LFR)",
     #                       "Optimized \n Preprocessing \n (OP)", "FAIRBOOST : \nNONE\nLFR,OP,RW",
@@ -321,7 +323,7 @@ def plot_merged_boxplot(df):
     # plt.savefig("Boxplots/Merged_plots.pdf")
 
 
-def plot_fairboost_boxplots(df):
+def plot_fairboost_boxplots(df, plots_dir=Path("plots/")):
     """
     this method will generate a plot combining all the combinations of classifiers and datasets for fairboost configs.
     The plots generated will have the name Combined_plots.pdf
@@ -356,10 +358,10 @@ def plot_fairboost_boxplots(df):
     grid.map(sns.boxplot, "(1) bootstrap_type / (2)preprocessing", "h_mean", linewidth=1, width=0.5,
              **PROPS)
 
-    plt.savefig("Boxplots/fairboost.pdf")
+    plt.savefig(plots_dir/"fairboost.pdf")
 
 
-def plot_unique_fairboost_boxplots(df):
+def plot_unique_fairboost_boxplots(df, plots_dir=Path("plots/")):
     """
     this method will generate a plot for every combination of classifiers and datasets for fairboost configurations.
     The plots generated will have the name fairboost_{classifier}_{dataset}.pdf
@@ -391,27 +393,27 @@ def plot_unique_fairboost_boxplots(df):
             plot = sns.boxplot(x="(1) bootstrap_type / (2)preprocessing", y="h_mean", data=plot_df,
                                ax=ax, showfliers=False, linewidth=3, width=0.5, **PROPS)
             # plot.set_xlabel(fontsize=30)
-            plt.savefig("Boxplots/fairboost_" +
-                        classifier + "_" + dataset + ".pdf")
+            plt.savefig(plots_dir/f"fairboost_{classifier}_{dataset}.pdf")
 
 
 def main():
-    df = get_data_h_mean()
+    df = get_data_h_mean() 
+    plots_dir = get_plots_dir("boxplots")
     
     # Creates a  unique file for every configuration
-    plot_unique_boxplot(df)
+    plot_unique_boxplot(df, plots_dir=plots_dir)
 
     # Creates a file combining all the plots
-    plot_multiple_boxplots(df, scale_y=False)
+    plot_multiple_boxplots(df, scale_y=False, plots_dir=plots_dir)
 
     # Creates the fairboost file
-    plot_fairboost_boxplots(df)
+    plot_fairboost_boxplots(df, plots_dir=plots_dir)
 
     #  Creates a  unique file for every fairboost configuration
-    plot_unique_fairboost_boxplots(df)
+    plot_unique_fairboost_boxplots(df, plots_dir=plots_dir)
 
     # Create the combined boxplot
-    plot_merged_boxplot(df)
+    plot_merged_boxplot(df, plots_dir=plots_dir)
 
 
 if __name__ == "__main__":

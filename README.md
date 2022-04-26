@@ -82,8 +82,9 @@ FairBoost/
 │   │
 │   │
 │   └───results/
-│       │   paretto_plots.py
-│       │   rectangular_plot.py
+│       │   generate_plots.py 
+│       │   analysis_best_LFR_params.py 
+│       │   result_analysis.py 
 │       └───plots/
 │       └───raw_data/
 ```
@@ -102,7 +103,10 @@ Contains the hyperparameter configurations used to run the evaluation pipelines.
 Contains Fairboost's code. To import Fairboost, import `main.py` file.
 
 ### Folder: results
-Folder with the output of the evaluation pipeline. The raw results can be found under `raw_data` directory. The files suffixed with `_plot` plot the data from `raw_data/` and save the resulting figures under `plots/`. 
+Folder with the output of the evaluation pipeline. 
+- The raw results can be found under `raw_data` directory. 
+- The files suffixed with `_plot` plot the data from `raw_data/` and save the resulting figures under `plots/`. To generate all the plots we used to visualize our results, `python3 generate_plots.py`.
+- Both files `result_analysis.py` and `analysis_best_LFR_params.py` analyze the results, without generating plots. The former one performs t-tests we use in our paper, the latter search for best LFR params.
 
 
 
