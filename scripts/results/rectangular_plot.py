@@ -1,11 +1,17 @@
 import json
-from typing import List, Dict
+from copy import deepcopy
+from typing import List, Dict, Tuple
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import plotnine as pn
 from typeguard import typechecked
+from math import ceil
+import os
+
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 
 def read_data_baseline(path):
@@ -51,14 +57,72 @@ def read_data_fairboost(path):
                         key = "Fairboost : " + dataset_key + "-" + preprocessing_key + "-" + classifier_key + "-" \
                               + preprocessing_value[i]["hyperparameters"]["init"]['bootstrap_type']
                         dict[key] = classifier_value
-            else:
-                for i in range(len(preprocessing_value)):
-                    for classifier_key, classifier_value in preprocessing_value[i]["results"].items():
-                        if preprocessing_value[i]["hyperparameters"]['bootstrap_type'] == "NONE":
-                            key = "Fairboost : " + dataset_key + "-" + preprocessing_key + "-" + classifier_key + "-" \
-                                  + preprocessing_value[i]["hyperparameters"]['bootstrap_type']
-                            dict[key] = classifier_value
+            # else:
+            #     for i in range(len(preprocessing_value)):
+            #         for classifier_key, classifier_value in preprocessing_value[i]["results"].items():
+            #             if preprocessing_value[i]["hyperparameters"]['bootstrap_type'] == "NONE":
+            #                 key = "Fairboost : " + dataset_key + "-" + preprocessing_key + "-" + classifier_key + "-" \
+            #                       + preprocessing_value[i]["hyperparameters"]['bootstrap_type']
+            #                 dict[key] = classifier_value
     return dict
+
+
+def rename_configs(t):
+    """
+    Renames the configurations .
+            Parameters:
+                    t : list of the data to rename
+    """
+    t = ["Ensembling baseline" if any(j in i for j in [
+        "Fairboost : compas-baseline-Random Forest-NONE",
+        "Fairboost : compas-baseline-Logistic Regression-NONE",
+        "Fairboost : german-baseline-Random Forest-NONE",
+        "Fairboost : german-baseline-Logistic Regression-NONE",
+        "Fairboost : adult-baseline-Random Forest-NONE",
+        "Fairboost : adult-baseline-Logistic Regression-NONE"
+    ])
+         else i for i in
+         t]
+    t = ["Fairboost: NONE/LFR,RW,OP" if any(j in i for j in [
+        "Fairboost : compas-fairboost-Random Forest-NONE",
+        "Fairboost : compas-fairboost-Logistic Regression-NONE"
+        "Fairboost : german-fairboost-Random Forest-NONE",
+        "Fairboost : german-fairboost-Logistic Regression-NONE",
+        "Fairboost : adult-fairboost-Random Forest-NONE",
+        "Fairboost : adult-fairboost-Logistic Regression-NONE"
+    ]) else i for i in
+         t]
+
+    t = ["Fairboost: Default/LFR,RW,OP" if any(j in i for j in [
+        "Fairboost : compas-fairboost-Random Forest-DEFAULT",
+        "Fairboost : compas-fairboost-Logistic Regression-DEFAULT",
+        "Fairboost : german-fairboost-Random Forest-DEFAULT",
+        "Fairboost : german-fairboost-Logistic Regression-DEFAULT",
+        "Fairboost : adult-fairboost-Random Forest-DEFAULT",
+        "Fairboost : adult-fairboost-Logistic Regression-DEFAULT"
+    ]) else i for i in
+         t]
+
+    t = ["Fairboost: CUSTOM/LFR,RW,OP" if any(j in i for j in [
+        "Fairboost : compas-fairboost-Random Forest-CUSTOM",
+        "Fairboost : compas-fairboost-Logistic Regression-CUSTOM",
+        "Fairboost : german-fairboost-Random Forest-CUSTOM",
+        "Fairboost : german-fairboost-Logistic Regression-CUSTOM",
+        "Fairboost : adult-fairboost-Random Forest-CUSTOM",
+        "Fairboost : adult-fairboost-Logistic Regression-CUSTOM"
+    ]) else i for i in
+         t]
+
+    t = ["Baseline" if any(j in i for j in ["baseline-Logistic Regression", "baseline-Random Forest"]) else i for i in
+         t]
+    t = ["Optimized Preprocessing \n(OP)" if any(
+        j in i for j in ["OptimPreproc-Logistic Regression", "OptimPreproc-Random Forest"]) else i for i in t]
+    t = ["Learning Fair Representation \n (LFR)" if any(
+        j in i for j in ["LFR-Logistic Regression", "LFR-Random Forest"]) else i for i in t]
+    t = ["Reweighing \n(RW)" if any(
+        j in i for j in ["Reweighing-Logistic Regression", "Reweighing-Random Forest"]) else i
+         for i in t]
+    return t
 
 
 @typechecked
@@ -86,12 +150,16 @@ def to_dataframe(data: Dict, dataset_name="", classifier_name=""):
             y1.append(mean_fairness - (std_fairness / 2))
             y2.append(mean_fairness + (std_fairness / 2))
             t.append(key)
+
+    t = rename_configs(t)
+
     d = pd.DataFrame({"x1": x1, "x2": x2, "y1": y1, "y2": y2, "t": t, "r": t})
     return d
 
 
 @typechecked
-def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figures=False, plots_dir=Path("plots/")):
+def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figures=False,
+                     plots_dir=Path("plots/")) -> Tuple:
     """
     Plots the rectangles plots.
             Parameters:
@@ -109,7 +177,8 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
          + pn.scale_y_continuous(name="fairness")
          # + scale_y_continuous(name="fairness", limits=(0,1.2))
          + pn.geom_rect(data=dataframe, mapping=pn.aes(xmin=dataframe["x1"], xmax=dataframe["x2"], ymin=dataframe["y1"],
-                                                       ymax=dataframe["y2"], fill=dataframe["t"]), color="black", alpha=0.6)
+                                                       ymax=dataframe["y2"], fill=dataframe["t"]), color="black",
+                        alpha=0.6)
          # color="black", alpha=1)
          # + geom_text(aes(x=dataframe["x1"] + (dataframe["x2"] - dataframe["x1"]) / 2,
          #                 y=dataframe["y1"] + (dataframe["y2"] - dataframe["y1"]) / 2, label=dataframe["r"]),
@@ -124,7 +193,7 @@ def rectangular_plot(data: Dict, dataset_name="", classifier_name="", print_figu
     file_name = f'rectangular-{dataset_name}-{classifier_name}.pdf'
     file_path = Path(plots_dir, file_name)
     g.save(file_path)
-    return g
+    return g, plot_title
 
 
 @typechecked
@@ -144,6 +213,41 @@ def read_data() -> Dict:
 
 
 @typechecked
+def plot_all(plots: List, plots_title: List, nb_col=2, plots_dir=Path("plots/"), print_figures=False):
+    """
+    Plots the rectangles plots in one figure.
+            Parameters:
+                    plots : List of plots to merge in one figure
+                    plots_title: Title of each plot
+                    nb_col: The number of columns in the figure
+                    plots_dir: Where to save the figure
+                    print_figures: Whether to print the figures or not
+    """
+    nb_row = ceil(len(plots) / 2)
+
+    fig = (pn.ggplot() + pn.geom_blank() + pn.theme_void() + pn.theme(figure_size=(11, 8)) +
+           pn.theme(legend_margin=-2, legend_box_spacing=0)).draw()
+    plt.subplots_adjust(left=0.1, bottom=0.1, right=0.80,
+                        top=0.9, wspace=0.4, hspace=0.5)
+    gs = gridspec.GridSpec(nb_row, nb_col)
+
+    for i, (plot, plot_title) in enumerate(zip(plots, plots_title)):
+        r = i // nb_col
+        c = i % nb_col
+        p = fig.add_subplot(gs[r, c])
+        p.set_xlabel('Accuracy', fontsize=7)
+        p.set_ylabel('Fairness', fontsize=7)
+        p.set_title(plot_title, fontsize=7)
+        _ = plot._draw_using_figure(fig, [p])
+
+    file_name = f'rectangular-all.pdf'
+    file_path = Path(plots_dir, file_name)
+    fig.savefig(file_path, orientation='portrait')
+    if print_figures:
+        print(fig)
+
+
+@typechecked
 def add_normalized_di(data: Dict):
     """
     Measures and adds the normalized disparate impact to
@@ -156,21 +260,34 @@ def add_normalized_di(data: Dict):
     """
     for key in data:
         data[key]['n_disparate_impact'] = [
-            score if score <= 1 else (score**-1) for score in data[key]['disparate_impact']
+            score if score <= 1 else (score ** -1) for score in data[key]['disparate_impact']
         ]
     return data
+
+
+def get_rectangular_plot_dir():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    plots_dir = Path(dir_path, "plots", 'rectangular')
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    return plots_dir
 
 
 def main():
     data = read_data()
     data = add_normalized_di(data)
 
+    plots, plots_title = [], []
+    plots_dir = get_rectangular_plot_dir()
+
     datasets = ["german", "adult", "compas"]
     classifiers = ["Logistic Regression", "Random Forest"]
     for dataset in datasets:
         for classifier in classifiers:
-            rectangular_plot(data, dataset_name=dataset,
-                             classifier_name=classifier, print_figures=False)
+            p, p_t = rectangular_plot(data, dataset_name=dataset,
+                                      classifier_name=classifier, print_figures=False, plots_dir=plots_dir)
+            plots.append(p)
+            plots_title.append(p_t)
+    plot_all(plots, plots_title, plots_dir=plots_dir)
 
 
 if __name__ == '__main__':
