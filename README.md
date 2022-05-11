@@ -1,5 +1,5 @@
 # FairBoost
-Fairboost is a unfairness tools that combines preprocessing tools via an ensemble to achieve fair and accurate results. For more details, refer to the paper.  
+Fairboost is a fairness tool that combines other fairness preprocessing tools via an ensemble to achieve fair and accurate results. For more details, refer to the paper.  
 
 ## Installation
 Because of AIF360, some dependencies have to be manually handled. We recommend replicating the following procedure for the installation of our project. It will suppose you have conda installed.
