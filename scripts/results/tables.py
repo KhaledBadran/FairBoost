@@ -3,11 +3,14 @@ import pandas as pd
 import numpy as np
 
 def average_performances(results):
-    f1_score, m_di = [], []
+    f1_score, di = [], []
     for x in results:
         f1_score = [*f1_score, *x['metrics']['f1-score']]
-        m_di = [*m_di, *x['metrics']['m_disparate_impact']]
-    return np.mean(f1_score), np.mean(m_di)
+        di = [*di, *x['metrics']['disparate_impact']]
+    normalized_di_score = [
+            score if score <= 1 else (score ** -1) for score in di
+        ]
+    return np.mean(f1_score), np.mean(normalized_di_score)
 
 def get_rows(data, column_name):
     """
@@ -96,8 +99,8 @@ def get_tables(data):
 def main():
     data = read_data()
     tables = get_tables(data)
-    print(tables[0].to_latex())
-    print(tables[1].to_latex())
+    print(tables[0].round(decimals=3).to_latex())
+    print(tables[1].round(decimals=3).to_latex())
 
 
 if __name__ == "__main__":
