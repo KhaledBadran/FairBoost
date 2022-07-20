@@ -1,8 +1,11 @@
+from typing import Dict, List, Tuple
 from utils import read_data
 import pandas as pd
 import numpy as np
+from typeguard import typechecked
 
-def average_performances(results):
+@typechecked
+def average_performances(results) -> Tuple[np.float64, np.float64]:
     f1_score, di = [], []
     for x in results:
         f1_score = [*f1_score, *x['metrics']['f1-score']]
@@ -12,7 +15,8 @@ def average_performances(results):
         ]
     return np.mean(f1_score), np.mean(normalized_di_score)
 
-def get_rows(data, column_name):
+@typechecked
+def get_rows(data:List, column_name)-> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Measures average performance and fairness on the datasets.
             Parameters:
@@ -31,54 +35,70 @@ def get_rows(data, column_name):
     performance['adult'], fairness['adult'] = average_performances(adult)
     performance['average'], fairness['average'] = average_performances(data)
 
+    column_name = column_name.lower()
     return pd.DataFrame.from_dict(performance,orient='index', columns=[column_name]), pd.DataFrame.from_dict(fairness,orient='index', columns=[column_name])
 
 # The following functions create a column in the final table
-def get_baseline_column(data):
+@typechecked
+def get_baseline_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     baseline = list(filter(lambda x : x['experiment'] == "baseline", data))
     return get_rows(baseline, 'baseline')
-def get_LFR_column(data):
+@typechecked
+def get_LFR_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     LFR = list(filter(lambda x : x['experiment'] == "preprocessing" and x['bootstrap_type'] == 'No bootstrap' and 'LFR' in x['preprocessing'], data))
     return get_rows(LFR, 'LFR')
-def get_OP_column(data):
+@typechecked
+def get_OP_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     OP = list(filter(lambda x : x['experiment'] == "preprocessing" and x['bootstrap_type'] == 'No bootstrap' and 'OptimPreproc' in x['preprocessing'], data))
     return get_rows(OP, 'OP')
-def get_RW_column(data):
+@typechecked
+def get_RW_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     RW = list(filter(lambda x : x['experiment'] == "preprocessing" and x['bootstrap_type'] == 'No bootstrap' and 'Reweighing' in x['preprocessing'], data))
     return get_rows(RW, 'RW')
-def get_none_1_column(data):
+@typechecked
+def get_none_1_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'none' and len(x['preprocessing']) == 1, data))
     return get_rows(x, 'NONE-1')
-def get_none_2_column(data):
+@typechecked
+def get_none_2_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'none' and len(x['preprocessing']) == 2, data))
     return get_rows(x, 'NONE-2')
-def get_none_3_column(data):
+@typechecked
+def get_none_3_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'none' and len(x['preprocessing']) == 3, data))
     return get_rows(x, 'NONE-3')
-def get_default_1_column(data):
+@typechecked
+def get_default_1_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'default' and len(x['preprocessing']) == 1, data))
     return get_rows(data, 'DEFAULT-1')
-def get_default_2_column(data):
+@typechecked
+def get_default_2_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'default' and len(x['preprocessing']) == 2, data))
     return get_rows(data, 'DEFAULT-2')
-def get_default_3_column(data):
+@typechecked
+def get_default_3_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'default' and len(x['preprocessing']) == 3, data))
     return get_rows(data, 'DEFAULT-3')
-def get_custom_1_column(data):
+@typechecked
+def get_custom_1_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'custom' and len(x['preprocessing']) == 1, data))
     return get_rows(data, 'CUSTOM-1')
-def get_custom_2_column(data):
+@typechecked
+def get_custom_2_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'custom' and len(x['preprocessing']) == 2, data))
     return get_rows(data, 'CUSTOM-2')
-def get_custom_3_column(data):
+@typechecked
+def get_custom_3_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'custom' and len(x['preprocessing']) == 3, data))
     return get_rows(data, 'CUSTOM-3')
-def get_baseline_ensemble(data):
+@typechecked
+def get_baseline_ensemble(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "ensemble" , data))
     return get_rows(data, 'ensemble')
 
 
-def get_tables(data):
+@typechecked
+def get_tables(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Returns a table of results.
             Parameters:
