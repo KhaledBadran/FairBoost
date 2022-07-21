@@ -35,14 +35,13 @@ def get_rows(data:List, column_name)-> Tuple[pd.DataFrame, pd.DataFrame]:
     performance['adult'], fairness['adult'] = average_performances(adult)
     performance['average'], fairness['average'] = average_performances(data)
 
-    column_name = column_name.lower()
     return pd.DataFrame.from_dict(performance,orient='index', columns=[column_name]), pd.DataFrame.from_dict(fairness,orient='index', columns=[column_name])
 
 # The following functions create a column in the final table
 @typechecked
 def get_baseline_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     baseline = list(filter(lambda x : x['experiment'] == "baseline", data))
-    return get_rows(baseline, 'baseline')
+    return get_rows(baseline, 'Baseline')
 @typechecked
 def get_LFR_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     LFR = list(filter(lambda x : x['experiment'] == "preprocessing" and x['bootstrap_type'] == 'No bootstrap' and 'LFR' in x['preprocessing'], data))
@@ -92,9 +91,17 @@ def get_custom_3_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     data = list(filter(lambda x : x['experiment'] == "fairboost" and x['bootstrap_type'] == 'custom' and len(x['preprocessing']) == 3, data))
     return get_rows(data, 'CUSTOM-3')
 @typechecked
-def get_baseline_ensemble(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    data = list(filter(lambda x : x['experiment'] == "ensemble" , data))
-    return get_rows(data, 'ensemble')
+def get_none_0_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    data = list(filter(lambda x : x['experiment'] == "ensemble" and x['bootstrap_type'] == 'none', data))
+    return get_rows(data, 'NONE-0')
+@typechecked
+def get_default_0_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    data = list(filter(lambda x : x['experiment'] == "ensemble" and x['bootstrap_type'] == 'default', data))
+    return get_rows(data, 'DEFAULT-0')
+@typechecked
+def get_custom_0_column(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    data = list(filter(lambda x : x['experiment'] == "ensemble" and x['bootstrap_type'] == 'custom' , data))
+    return get_rows(data, 'CUSTOM-0')
 
 
 @typechecked
@@ -106,7 +113,7 @@ def get_tables(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
             Returns:
                     (performance, fairness) (Tuple): a tuple of tables wih average performances on datasets
     """
-    funcs = [get_baseline_column, get_LFR_column, get_OP_column, get_RW_column, get_baseline_ensemble, get_none_1_column, get_none_2_column,get_none_3_column,get_default_1_column,get_default_2_column,get_default_3_column,get_custom_1_column,get_custom_2_column,get_custom_3_column]
+    funcs = [get_baseline_column, get_LFR_column, get_OP_column, get_RW_column, get_none_0_column, get_none_1_column, get_none_2_column,get_none_3_column,get_default_0_column, get_default_1_column,get_default_2_column,get_default_3_column,get_custom_0_column, get_custom_1_column,get_custom_2_column,get_custom_3_column]
     performance, fairness = [], []
     for func in funcs:
         x = func(data)
