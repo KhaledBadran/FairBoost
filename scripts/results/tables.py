@@ -5,6 +5,8 @@ import numpy as np
 from typeguard import typechecked
 
 
+data_for_stat_tests = []
+
 @typechecked
 def average_performances(results) -> Tuple[np.float64, np.float64]:
     f1_score, di = [], []
@@ -15,6 +17,19 @@ def average_performances(results) -> Tuple[np.float64, np.float64]:
         score if score <= 1 else (score ** -1) for score in di
     ]
     return np.mean(f1_score), np.mean(normalized_di_score)
+
+
+@typechecked
+def relevant_performances(results) -> Tuple[List[np.float64], List[np.float64]]:
+    # saves all the runs for the f1-score and the normalized disparate impact scores
+    f1_score, di = [], []
+    for x in results:
+        f1_score = [*f1_score, *x['metrics']['f1-score']]
+        di = [*di, *x['metrics']['disparate_impact']]
+    normalized_di_score = [
+        score if score <= 1 else (score ** -1) for score in di
+    ]
+    return f1_score, normalized_di_score
 
 
 @typechecked
@@ -36,6 +51,16 @@ def get_rows(data: List, column_name) -> Tuple[pd.DataFrame, pd.DataFrame]:
     performance['compas'], fairness['compas'] = average_performances(compas)
     performance['adult'], fairness['adult'] = average_performances(adult)
     performance['average'], fairness['average'] = average_performances(data)
+
+    # Save the results of all runs for statistical tests
+    for dataset in [german, compas, adult]:
+        relevant_accuracy, relevant_fairness = relevant_performances(dataset)
+
+        # create a tuple like (method_name, dataset_name, classifier_name, accuracy_scores, fairness_scores)
+        relevant_data_tuple = (column_name, dataset[0]['dataset'], data[0]['classifier'], relevant_accuracy, relevant_fairness)
+
+        # append the results to a list
+        data_for_stat_tests.append(relevant_data_tuple)
 
     return pd.DataFrame.from_dict(performance, orient='index', columns=[column_name]), pd.DataFrame.from_dict(fairness, orient='index', columns=[column_name])
 
@@ -242,6 +267,9 @@ def main():
     print(tables_rf[1].round(decimals=3).to_latex())
     print(tables_lr[0].round(decimals=3).to_latex())
     print(tables_lr[1].round(decimals=3).to_latex())
+
+    df = pd.DataFrame(data_for_stat_tests, columns=['method', 'dataset', 'classifier', 'accuracy', 'fairness',])
+    df.to_csv('statistical_test/statistical_tests_raw_data.csv', index=False)
 
 
 if __name__ == "__main__":
