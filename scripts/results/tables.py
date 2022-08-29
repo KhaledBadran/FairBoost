@@ -7,6 +7,7 @@ from typeguard import typechecked
 
 data_for_stat_tests = []
 
+
 @typechecked
 def average_performances(results) -> Tuple[np.float64, np.float64]:
     f1_score, di = [], []
@@ -57,7 +58,8 @@ def get_rows(data: List, column_name) -> Tuple[pd.DataFrame, pd.DataFrame]:
         relevant_accuracy, relevant_fairness = relevant_performances(dataset)
 
         # create a tuple like (method_name, dataset_name, classifier_name, accuracy_scores, fairness_scores)
-        relevant_data_tuple = (column_name, dataset[0]['dataset'], data[0]['classifier'], relevant_accuracy, relevant_fairness)
+        relevant_data_tuple = (
+            column_name, dataset[0]['dataset'], data[0]['classifier'], relevant_accuracy, relevant_fairness)
 
         # append the results to a list
         data_for_stat_tests.append(relevant_data_tuple)
@@ -212,7 +214,7 @@ def get_RW_column_by_classifier(data: List, classifier: str) -> Tuple[pd.DataFra
 def get_none_column_by_classifier_by_algo(data: List, classifier: str, algos: Set) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = list(filter(lambda x: x['experiment'] == "fairboost" and x['classifier'] ==
              classifier and x['bootstrap_type'] == 'none' and set(x['preprocessing']) == algos, data))
-    return get_rows(x, 'Ensemble ' + "+".join(algos))
+    return get_rows(x, "+".join(algos))
 
 
 @typechecked
@@ -268,7 +270,8 @@ def main():
     print(tables_lr[0].round(decimals=3).to_latex())
     print(tables_lr[1].round(decimals=3).to_latex())
 
-    df = pd.DataFrame(data_for_stat_tests, columns=['method', 'dataset', 'classifier', 'accuracy', 'fairness',])
+    df = pd.DataFrame(data_for_stat_tests, columns=[
+                      'method', 'dataset', 'classifier', 'accuracy', 'fairness', ])
     df.to_csv('statistical_test/statistical_tests_raw_data.csv', index=False)
 
 
