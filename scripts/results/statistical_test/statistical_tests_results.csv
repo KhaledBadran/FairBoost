@@ -1,0 +1,73 @@
+classifier,dataset,method_1,method_2,accuracy,fairness
+Random Forest,german,LFR,\+OP,Significant,Not significant
+Random Forest,german,LFR,\+RW,Significant,Not significant
+Random Forest,german,LFR,All,Significant,Significant
+Random Forest,german,OP,\+LFR,Not significant,Not significant
+Random Forest,german,OP,\+RW,Not significant,Not significant
+Random Forest,german,OP,All,Significant,Not significant
+Random Forest,german,RW,\+LFR,Not significant,Not significant
+Random Forest,german,RW,\+OP,Not significant,Not significant
+Random Forest,german,RW,All,Not significant,Significant
+Random Forest,german,Baseline,LFR,Not significant,Not significant
+Random Forest,german,Baseline,OP,Not significant,Not significant
+Random Forest,german,Baseline,RW,Not significant,Not significant
+Random Forest,compas,LFR,\+OP,Not significant,Significant
+Random Forest,compas,LFR,\+RW,Not significant,Significant
+Random Forest,compas,LFR,All,Not significant,Significant
+Random Forest,compas,OP,\+LFR,Significant,Not significant
+Random Forest,compas,OP,\+RW,Significant,Not significant
+Random Forest,compas,OP,All,Significant,Not significant
+Random Forest,compas,RW,\+LFR,Significant,Not significant
+Random Forest,compas,RW,\+OP,Not significant,Not significant
+Random Forest,compas,RW,All,Significant,Not significant
+Random Forest,compas,Baseline,LFR,Significant,Significant
+Random Forest,compas,Baseline,OP,Not significant,Significant
+Random Forest,compas,Baseline,RW,Not significant,Significant
+Random Forest,adult,LFR,\+OP,Significant,Significant
+Random Forest,adult,LFR,\+RW,Significant,Not significant
+Random Forest,adult,LFR,All,Significant,Significant
+Random Forest,adult,OP,\+LFR,Significant,Not significant
+Random Forest,adult,OP,\+RW,Significant,Not significant
+Random Forest,adult,OP,All,Significant,Significant
+Random Forest,adult,RW,\+LFR,Significant,Not significant
+Random Forest,adult,RW,\+OP,Significant,Not significant
+Random Forest,adult,RW,All,Significant,Not significant
+Random Forest,adult,Baseline,LFR,Significant,Significant
+Random Forest,adult,Baseline,OP,Not significant,Significant
+Random Forest,adult,Baseline,RW,Not significant,Significant
+Logistic Regression,german,LFR,\+OP,Not significant,Not significant
+Logistic Regression,german,LFR,\+RW,Not significant,Not significant
+Logistic Regression,german,LFR,All,Not significant,Not significant
+Logistic Regression,german,OP,\+LFR,Not significant,Not significant
+Logistic Regression,german,OP,\+RW,Not significant,Not significant
+Logistic Regression,german,OP,All,Not significant,Not significant
+Logistic Regression,german,RW,\+LFR,Not significant,Not significant
+Logistic Regression,german,RW,\+OP,Not significant,Significant
+Logistic Regression,german,RW,All,Not significant,Significant
+Logistic Regression,german,Baseline,LFR,Not significant,Not significant
+Logistic Regression,german,Baseline,OP,Not significant,Not significant
+Logistic Regression,german,Baseline,RW,Not significant,Significant
+Logistic Regression,compas,LFR,\+OP,Not significant,Significant
+Logistic Regression,compas,LFR,\+RW,Not significant,Significant
+Logistic Regression,compas,LFR,All,Not significant,Significant
+Logistic Regression,compas,OP,\+LFR,Not significant,Not significant
+Logistic Regression,compas,OP,\+RW,Significant,Significant
+Logistic Regression,compas,OP,All,Significant,Significant
+Logistic Regression,compas,RW,\+LFR,Not significant,Not significant
+Logistic Regression,compas,RW,\+OP,Not significant,Not significant
+Logistic Regression,compas,RW,All,Not significant,Not significant
+Logistic Regression,compas,Baseline,LFR,Not significant,Significant
+Logistic Regression,compas,Baseline,OP,Not significant,Significant
+Logistic Regression,compas,Baseline,RW,Not significant,Significant
+Logistic Regression,adult,LFR,\+OP,Not significant,Significant
+Logistic Regression,adult,LFR,\+RW,Not significant,Not significant
+Logistic Regression,adult,LFR,All,Not significant,Significant
+Logistic Regression,adult,OP,\+LFR,Significant,Significant
+Logistic Regression,adult,OP,\+RW,Significant,Not significant
+Logistic Regression,adult,OP,All,Significant,Significant
+Logistic Regression,adult,RW,\+LFR,Significant,Significant
+Logistic Regression,adult,RW,\+OP,Significant,Significant
+Logistic Regression,adult,RW,All,Significant,Not significant
+Logistic Regression,adult,Baseline,LFR,Significant,Significant
+Logistic Regression,adult,Baseline,OP,Significant,Significant
+Logistic Regression,adult,Baseline,RW,Significant,Significant

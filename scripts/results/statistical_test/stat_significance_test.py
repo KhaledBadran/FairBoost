@@ -26,8 +26,12 @@ def convert_res_to_array(row):
     row['fairness'] = to_array(row['fairness'])
     return row
 
+def is_significant(p_value, alpha):
+    return 'Significant' if p_value < alpha else 'Not significant'
 
 def main():
+    alpha = 0.05
+
     crnt_dir = crnt_dir = Path(__file__).resolve().parent
     data_file = crnt_dir/'statistical_tests_raw_data.csv'
     # Load data
@@ -63,8 +67,8 @@ def main():
                     # Save results in dict
                     ensemble_name = generate_ensemble_name(
                         r, unique_results['method'])
-                    res[classifier][dataset][unique_technique][ensemble_name]['accuracy'] = acc_p_value
-                    res[classifier][dataset][unique_technique][ensemble_name]['fairness'] = fairness_p_value
+                    res[classifier][dataset][unique_technique][ensemble_name]['accuracy'] = is_significant(acc_p_value, alpha)
+                    res[classifier][dataset][unique_technique][ensemble_name]['fairness'] = is_significant(fairness_p_value, alpha)
 
             # Comparing unique techniques against baseline
             df_filtered = df[(df['dataset'] == dataset) &
@@ -82,8 +86,30 @@ def main():
                 # Run mannwhitney test for fairness results
                 _, fairness_p_value = mannwhitneyu(
                     baseline['fairness'], unique_results['fairness'])
-                res[classifier][dataset]['Baseline'][unique_technique]['accuracy'] = acc_p_value
-                res[classifier][dataset]['Baseline'][unique_technique]['fairness'] = fairness_p_value
+                res[classifier][dataset]['Baseline'][unique_technique]['accuracy'] = is_significant(acc_p_value, alpha)
+                res[classifier][dataset]['Baseline'][unique_technique]['fairness'] = is_significant(fairness_p_value, alpha)
+
+    res_for_df = []
+    for classifier in ['Random Forest', 'Logistic Regression']:
+        for dataset in res[classifier].keys():
+            for method_1 in res[classifier][dataset].keys():
+                for method_2 in res[classifier][dataset][method_1].keys():
+                    res_for_df.append({
+                        'classifier': classifier,
+                        'dataset': dataset,
+                        'method_1': method_1,
+                        'method_2': method_2,
+                        'accuracy': res[classifier][dataset][method_1][method_2]['accuracy'],
+                        'fairness': res[classifier][dataset][method_1][method_2]['fairness']
+                    })
+
+    print(res_for_df)
+    df = pd.DataFrame(res_for_df)
+    # escape + sign for csv
+    df['method_1'] = df['method_1'].str.replace('+', '\+')
+    df['method_2'] = df['method_2'].str.replace('+', '\+')
+    # df = df.replace('+', "\+", regex=True)
+    df.to_csv(crnt_dir/'statistical_tests_results.csv', index=False)
 
     with open(crnt_dir/'results.json', 'w') as f:
         f.write(json.dumps(res, indent=4))

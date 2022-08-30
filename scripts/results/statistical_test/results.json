@@ -3,174 +3,174 @@
         "german": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.028306043228323398,
-                    "fairness": 0.06402210128302689
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.009108496398030965,
-                    "fairness": 0.24132159301718004
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.004586392080253494,
-                    "fairness": 0.04515456962427901
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.8501067391385259,
-                    "fairness": 0.18587673236587576
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.21229383619233155,
-                    "fairness": 0.9698499769931556
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.03763531378731424,
-                    "fairness": 0.06402210128302689
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.24132159301718004,
-                    "fairness": 0.21229383619233155
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+OP": {
-                    "accuracy": 0.14046504815835495,
-                    "fairness": 0.24132159301718004
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.06402210128302689,
-                    "fairness": 0.011329696684474665
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.12122450301291662,
-                    "fairness": 0.3846730627355087
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "OP": {
-                    "accuracy": 0.8501067391385259,
-                    "fairness": 0.9097218891455553
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "RW": {
-                    "accuracy": 0.4055023001299908,
-                    "fairness": 0.1985957586332152
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 }
             }
         },
         "compas": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.21229383619233155,
-                    "fairness": 0.0007685389131627665
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "+RW": {
-                    "accuracy": 0.24132159301718004,
-                    "fairness": 0.00032983852077799353
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "All": {
-                    "accuracy": 0.06402210128302689,
-                    "fairness": 0.00032983852077799353
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.0007685389131627665,
-                    "fairness": 0.4273553138978077
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.0211339281291611,
-                    "fairness": 0.06402210128302689
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00032983852077799353,
-                    "fairness": 0.6231762238821174
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.0036105143123296027,
-                    "fairness": 0.27303633975118835
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "+OP": {
-                    "accuracy": 0.14046504815835495,
-                    "fairness": 0.47267559351158717
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00043963875262656454,
-                    "fairness": 0.12122450301291662
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.017257456083119765,
-                    "fairness": 0.00018267179110955002
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "OP": {
-                    "accuracy": 0.5707503880581739,
-                    "fairness": 0.00579535854433471
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "RW": {
-                    "accuracy": 0.47267559351158717,
-                    "fairness": 0.00032983852077799353
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             }
         },
         "adult": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.00024612812790522973,
-                    "fairness": 0.0005828399431792743
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "+RW": {
-                    "accuracy": 0.04499303387735437,
-                    "fairness": 0.520209005780562
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.0007685389131627665
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.00043963875262656454,
-                    "fairness": 0.053902557169387175
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.031209012771740218,
-                    "fairness": 0.14046504815835495
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00043963875262656454,
-                    "fairness": 0.014019277113959953
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.017257456083119765,
-                    "fairness": 0.18587673236587576
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "+OP": {
-                    "accuracy": 0.0211339281291611,
-                    "fairness": 0.6775849579524755
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.08897301170181328
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.031209012771740218,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "OP": {
-                    "accuracy": 0.3447042220069576,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "RW": {
-                    "accuracy": 0.07566157214388704,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             }
         }
@@ -179,174 +179,174 @@
         "german": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.28973706282213785,
-                    "fairness": 0.9397203669477441
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.21194990616504217,
-                    "fairness": 0.4723423874468554
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.17345557371239162,
-                    "fairness": 0.8205295061094116
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.7913367801006604,
-                    "fairness": 0.9698499769931556
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.47267559351158717,
-                    "fairness": 0.18587673236587576
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.6775849579524755,
-                    "fairness": 0.6775849579524755
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.8499952484876381,
-                    "fairness": 0.24096755111721346
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+OP": {
-                    "accuracy": 0.44952132576702597,
-                    "fairness": 0.014019277113959953
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "All": {
-                    "accuracy": 0.5205228832757727,
-                    "fairness": 0.0028272720911168077
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.3255694067409992,
-                    "fairness": 0.8797843010569926
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "OP": {
-                    "accuracy": 1.0,
-                    "fairness": 1.0
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "RW": {
-                    "accuracy": 0.8205295061094116,
-                    "fairness": 0.002487538658093602
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             }
         },
         "compas": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.47267559351158717,
-                    "fairness": 0.0005717769654451723
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "+RW": {
-                    "accuracy": 0.9698499769931556,
-                    "fairness": 0.00216851606410531
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "All": {
-                    "accuracy": 0.6775849579524755,
-                    "fairness": 0.005722030191733962
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.21229383619233155,
-                    "fairness": 0.5205228832757727
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+RW": {
-                    "accuracy": 0.031209012771740218,
-                    "fairness": 0.009108496398030965
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "All": {
-                    "accuracy": 0.00579535854433471,
-                    "fairness": 0.014019277113959953
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.4263100165939262,
-                    "fairness": 0.7331503112076126
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "+OP": {
-                    "accuracy": 0.5707503880581739,
-                    "fairness": 1.0
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.10410988966022681,
-                    "fairness": 0.8501067391385259
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.07566157214388704,
-                    "fairness": 0.00017861448837368162
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "OP": {
-                    "accuracy": 0.27303633975118835,
-                    "fairness": 0.00043963875262656454
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "RW": {
-                    "accuracy": 0.47267559351158717,
-                    "fairness": 0.00018267179110955002
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             }
         },
         "adult": {
             "LFR": {
                 "+OP": {
-                    "accuracy": 0.18587673236587576,
-                    "fairness": 0.031209012771740218
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 },
                 "+RW": {
-                    "accuracy": 1.0,
-                    "fairness": 1.0
+                    "accuracy": "Not significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.18587673236587576,
-                    "fairness": 0.031209012771740218
+                    "accuracy": "Not significant",
+                    "fairness": "Significant"
                 }
             },
             "OP": {
                 "+LFR": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.0013149446697132139
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "+RW": {
-                    "accuracy": 0.0017062493689195964,
-                    "fairness": 0.27303633975118835
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 },
                 "All": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.0013149446697132139
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             },
             "RW": {
                 "+LFR": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.00043963875262656454
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "+OP": {
-                    "accuracy": 0.00024612812790522973,
-                    "fairness": 0.00018267179110955002
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "All": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 0.5707503880581739
+                    "accuracy": "Significant",
+                    "fairness": "Not significant"
                 }
             },
             "Baseline": {
                 "LFR": {
-                    "accuracy": 0.00018267179110955002,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "OP": {
-                    "accuracy": 0.04515456962427901,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 },
                 "RW": {
-                    "accuracy": 0.0028272720911168077,
-                    "fairness": 6.386444750436982e-05
+                    "accuracy": "Significant",
+                    "fairness": "Significant"
                 }
             }
         }
