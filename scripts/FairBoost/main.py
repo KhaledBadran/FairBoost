@@ -21,7 +21,7 @@ class Bootstrap_type(str, Enum):
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, meta_model=LogisticRegression(random_state=0), verbose=False):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, cv=5, meta_model=LogisticRegression(random_state=0), verbose=False):
         """
                 Parameters:
                         model:  The model that will be used by Fairboost.
@@ -45,6 +45,7 @@ class FairBoost(object):
         # The trained models
         self.models = []
         self.meta_model = meta_model
+        self.cv = cv
 
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
@@ -182,32 +183,70 @@ class FairBoost(object):
             raise Exception(
                 "Fairboost has not been trained yet, thus it has no training dataset.")
         return self.training_datasets
+    
+    def _merge_cv_folds(self, arr: List, i: int) -> np.array:
+        """
+        Merges the folds in the given array together
+        except the one at index i.
+        Input:
+            arr: The array with folds
+            i: the fold not to merge
+        Output:
+            arr: the merged array without fold i
+        """
+        return np.concatenate((*arr[:i], *arr[i+1:]), axis=0)
 
-    # def _fit_meta_model(self, datasets, y):
-    #     t_datasets = []
-    #     for X_bootstrap, y_bootstrap, w in datasets:
-    #         X_bootstrap = np.split(X_bootstrap, self._n_splits, axis=-1)
-    #         y_bootstrap = np.split(y_bootstrap, self._n_splits, axis=-1)
-    #         w = np.split(w, self._n_splits, axis=-1)
-    #         t_datasets.append((X_bootstrap, y_bootstrap, w))
-    #     datasets = t_datasets
+    def split_arrays(self, datasets, y):
+        """
+        Splits the "datasets" and "y" var in 
+        "self.cv" folds.
+        """
+        t_datasets = []
+        for X, y, w in datasets:
+            X = np.array_split(X, self.cv, axis=0)
+            y = np.array_split(y, self.cv, axis=0)
+            w = np.array_split(w, self.cv, axis=0)
+            t_datasets.append((X, y, w))
+        datasets = t_datasets
+        
+        y = np.array_split(y, self.cv, axis=0)
+        return datasets, y
 
-    #     for i in self._n_splits:
-    #         # Train base models
-    #         models = []
-    #         for X_bootstrap, y_bootstrap, w in datasets:
-    #             y_bootstrap = y_bootstrap.ravel()
-    #             model = clone(self.model)
-    #             model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
-    #             models.append(model)
 
-    #         # Train meta models
-    #         y_pred = []
-    #         for i in range(len(models)):
-    #             X, y, _ = datasets[i % len(datasets)]
-    #             y_pred.append(models[i].predict(X))
-    #         y_pred = np.array(y_pred).transpose()
-    #         self.meta_model = self.meta_model.fit(y_pred, y)
+    def _fit_meta_model(self, datasets: List[Tuple], y_gt: np.array):
+        """
+        Fits the meta-model to the dataset using cross validation
+        (i.e. (1) split a dataset in folds, (2) train base models
+        on k-1 folds, (3) train meta-model on last fold. Repeat 
+        for each fold).
+        Input:
+            datasets: The tuple returned by self.__transform
+            y_gt: The ground truth labels
+        """
+        # Split dataset into folds
+        datasets, y_gt = self.split_arrays(datasets, y_gt)
+
+        for i in range(self.cv):
+            # Train the base models on self.cv-1 folds
+            models = []
+            for X, y, w in datasets:
+                X = self._merge_cv_folds(X, i)
+                y = self._merge_cv_folds(y,  i)
+                w = self._merge_cv_folds(w, i)
+                y = y.ravel()
+                model = clone(self.model)
+                model.fit(X, y, sample_weight=w)
+                models.append(model)
+
+            # Train meta model
+            y_pred = []
+            # Generate prediction of base models
+            for j in range(len(models)):
+                X, y, _ = datasets[j % len(datasets)]
+                X, y = X[i], y[i]
+                y_pred.append(models[j].predict(X))
+            y_pred = np.array(y_pred).transpose()
+            self.meta_model = self.meta_model.fit(y_pred, y_gt[i].ravel())
 
     def fit(self, dataset: BinaryLabelDataset, preprocessed_datasets=None):
         '''
@@ -233,29 +272,15 @@ class FairBoost(object):
         else:
             datasets = preprocessed_datasets
         self.training_datasets = datasets
-
-        # If we use stacking, we must create a held-out dataset for the meta-model
-        if self.bootstrap_type == Bootstrap_type.STACKING:
-            cut_idx = int(.8*len(datasets[0][0]))
-            m_datasets, mm_datasets = [], []
-            for X_bootstrap, y_bootstrap, w in datasets:
-                m_datasets.append((X_bootstrap[:cut_idx], y_bootstrap[:cut_idx], w[:cut_idx]))
-                mm_datasets.append((X_bootstrap[cut_idx:], y_bootstrap[cut_idx:], w[cut_idx:]))
-            datasets = m_datasets
             
-        for X_bootstrap, y_bootstrap, w in datasets:
-            y_bootstrap = y_bootstrap.ravel()
+        for X, y, w in datasets:
+            y = y.ravel()
             model = clone(self.model)
-            model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
+            model.fit(X, y, sample_weight=w)
             self.models.append(model)
 
         if self.bootstrap_type == Bootstrap_type.STACKING:
-            y_pred = []
-            for i in range(len(self.models)):
-                X, y, _ = datasets[i % len(datasets)]
-                y_pred.append(self.models[i].predict(X))
-            y_pred = np.array(y_pred).transpose()
-            self.meta_model = self.meta_model.fit(y_pred, y_bootstrap, sample_weight=w)
+            self._fit_meta_model(datasets, dataset.labels)
         return self
 
     def predict(self, dataset: BinaryLabelDataset) -> np.array:
