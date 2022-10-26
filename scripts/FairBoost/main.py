@@ -1,6 +1,7 @@
 ## imports ##
 import numpy as np
 from sklearn.base import clone
+from sklearn.linear_model import LogisticRegression
 from typeguard import typechecked
 from enum import Enum
 from aif360.datasets import BinaryLabelDataset
@@ -15,11 +16,12 @@ class Bootstrap_type(str, Enum):
     NONE = "NONE"
     DEFAULT = 'DEFAULT'
     CUSTOM = 'CUSTOM'
+    STACKING = 'STACKING'
 
 
 @typechecked
 class FairBoost(object):
-    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, verbose=False):
+    def __init__(self, model, preprocessing_functions: List[Preprocessing], bootstrap_type=Bootstrap_type.DEFAULT, bootstrap_size=1, n_datasets=10, meta_model=LogisticRegression(random_state=0), verbose=False):
         """
                 Parameters:
                         model:  The model that will be used by Fairboost.
@@ -42,6 +44,7 @@ class FairBoost(object):
 
         # The trained models
         self.models = []
+        self.meta_model = meta_model
 
     def __transform(self, dataset: BinaryLabelDataset, fit=False) -> List[Tuple]:
         '''
@@ -180,6 +183,32 @@ class FairBoost(object):
                 "Fairboost has not been trained yet, thus it has no training dataset.")
         return self.training_datasets
 
+    # def _fit_meta_model(self, datasets, y):
+    #     t_datasets = []
+    #     for X_bootstrap, y_bootstrap, w in datasets:
+    #         X_bootstrap = np.split(X_bootstrap, self._n_splits, axis=-1)
+    #         y_bootstrap = np.split(y_bootstrap, self._n_splits, axis=-1)
+    #         w = np.split(w, self._n_splits, axis=-1)
+    #         t_datasets.append((X_bootstrap, y_bootstrap, w))
+    #     datasets = t_datasets
+
+    #     for i in self._n_splits:
+    #         # Train base models
+    #         models = []
+    #         for X_bootstrap, y_bootstrap, w in datasets:
+    #             y_bootstrap = y_bootstrap.ravel()
+    #             model = clone(self.model)
+    #             model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
+    #             models.append(model)
+
+    #         # Train meta models
+    #         y_pred = []
+    #         for i in range(len(models)):
+    #             X, y, _ = datasets[i % len(datasets)]
+    #             y_pred.append(models[i].predict(X))
+    #         y_pred = np.array(y_pred).transpose()
+    #         self.meta_model = self.meta_model.fit(y_pred, y)
+
     def fit(self, dataset: BinaryLabelDataset, preprocessed_datasets=None):
         '''
         Fit function similar to Sklearn API. If preprocessed_datasets
@@ -195,18 +224,38 @@ class FairBoost(object):
                 Returns:
                         self
         '''
+        # If the user has already provided the result of preprocessing, use it
         if preprocessed_datasets is None:
             datasets = self.__transform(dataset, fit=True)
-            if self.bootstrap_type != Bootstrap_type.NONE:
+            # Only DEFAULT or CUSTOM use boostrapping
+            if self.bootstrap_type in set([Bootstrap_type.DEFAULT, Bootstrap_type.CUSTOM]):
                 datasets = self.__bootstrap_datasets(datasets)
         else:
             datasets = preprocessed_datasets
         self.training_datasets = datasets
+
+        # If we use stacking, we must create a held-out dataset for the meta-model
+        if self.bootstrap_type == Bootstrap_type.STACKING:
+            cut_idx = int(.8*len(datasets[0][0]))
+            m_datasets, mm_datasets = [], []
+            for X_bootstrap, y_bootstrap, w in datasets:
+                m_datasets.append((X_bootstrap[:cut_idx], y_bootstrap[:cut_idx], w[:cut_idx]))
+                mm_datasets.append((X_bootstrap[cut_idx:], y_bootstrap[cut_idx:], w[cut_idx:]))
+            datasets = m_datasets
+            
         for X_bootstrap, y_bootstrap, w in datasets:
             y_bootstrap = y_bootstrap.ravel()
             model = clone(self.model)
             model.fit(X_bootstrap, y_bootstrap, sample_weight=w)
             self.models.append(model)
+
+        if self.bootstrap_type == Bootstrap_type.STACKING:
+            y_pred = []
+            for i in range(len(self.models)):
+                X, y, _ = datasets[i % len(datasets)]
+                y_pred.append(self.models[i].predict(X))
+            y_pred = np.array(y_pred).transpose()
+            self.meta_model = self.meta_model.fit(y_pred, y_bootstrap, sample_weight=w)
         return self
 
     def predict(self, dataset: BinaryLabelDataset) -> np.array:
@@ -223,7 +272,14 @@ class FairBoost(object):
         for i in range(len(self.models)):
             X, y, _ = datasets[i % len(datasets)]
             y_pred.append(self.models[i].predict(X))
-        # Computing a soft majority voting
+        
         y_pred = np.array(y_pred).transpose()
-        y_pred = np.mean(y_pred, axis=-1).astype(int)
+        # Merge predictions
+        if self.bootstrap_type == Bootstrap_type.STACKING:
+            y_pred = self.meta_model.predict(y_pred)
+        else:
+            # Soft majority voting
+            y_pred = np.mean(y_pred, axis=-1)
+
+        y_pred = y_pred.astype(int)
         return y_pred
