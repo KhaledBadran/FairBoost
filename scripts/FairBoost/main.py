@@ -196,7 +196,7 @@ class FairBoost(object):
         """
         return np.concatenate((*arr[:i], *arr[i+1:]), axis=0)
 
-    def split_arrays(self, datasets, y):
+    def split_arrays(self, datasets, y_gt):
         """
         Splits the "datasets" and "y" var in 
         "self.cv" folds.
@@ -209,8 +209,8 @@ class FairBoost(object):
             t_datasets.append((X, y, w))
         datasets = t_datasets
         
-        y = np.array_split(y, self.cv, axis=0)
-        return datasets, y
+        y_gt = np.array_split(y_gt, self.cv, axis=0)
+        return datasets, y_gt
 
 
     def _fit_meta_model(self, datasets: List[Tuple], y_gt: np.array):
@@ -246,7 +246,7 @@ class FairBoost(object):
                 X, y = X[i], y[i]
                 y_pred.append(models[j].predict(X))
             y_pred = np.array(y_pred).transpose()
-            self.meta_model = self.meta_model.fit(y_pred, y_gt[i].ravel())
+            self.meta_model = self.meta_model.fit(y_pred, y_gt[i])
 
     def fit(self, dataset: BinaryLabelDataset, preprocessed_datasets=None):
         '''
@@ -280,7 +280,7 @@ class FairBoost(object):
             self.models.append(model)
 
         if self.bootstrap_type == Bootstrap_type.STACKING:
-            self._fit_meta_model(datasets, dataset.labels)
+            self._fit_meta_model(datasets, dataset.labels.ravel())
         return self
 
     def predict(self, dataset: BinaryLabelDataset) -> np.array:
