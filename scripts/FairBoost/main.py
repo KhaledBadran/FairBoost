@@ -184,7 +184,7 @@ class FairBoost(object):
                 "Fairboost has not been trained yet, thus it has no training dataset.")
         return self.training_datasets
     
-    def _merge_cv_folds(self, arr: List, i: int) -> np.array:
+    def __merge_cv_folds(self, arr: List, i: int) -> np.array:
         """
         Merges the folds in the given array together
         except the one at index i.
@@ -196,7 +196,7 @@ class FairBoost(object):
         """
         return np.concatenate((*arr[:i], *arr[i+1:]), axis=0)
 
-    def split_arrays(self, datasets, y_gt):
+    def __split_arrays(self, datasets, y_gt):
         """
         Splits the "datasets" and "y" var in 
         "self.cv" folds.
@@ -213,7 +213,7 @@ class FairBoost(object):
         return datasets, y_gt
 
 
-    def _fit_meta_model(self, datasets: List[Tuple], y_gt: np.array):
+    def __fit_meta_model(self, datasets: List[Tuple], y_gt: np.array):
         """
         Fits the meta-model to the dataset using cross validation
         (i.e. (1) split a dataset in folds, (2) train base models
@@ -224,15 +224,15 @@ class FairBoost(object):
             y_gt: The ground truth labels
         """
         # Split dataset into folds
-        datasets, y_gt = self.split_arrays(datasets, y_gt)
+        datasets, y_gt = self.__split_arrays(datasets, y_gt)
 
         for i in range(self.cv):
             # Train the base models on self.cv-1 folds
             models = []
             for X, y, w in datasets:
-                X = self._merge_cv_folds(X, i)
-                y = self._merge_cv_folds(y,  i)
-                w = self._merge_cv_folds(w, i)
+                X = self.__merge_cv_folds(X, i)
+                y = self.__merge_cv_folds(y,  i)
+                w = self.__merge_cv_folds(w, i)
                 y = y.ravel()
                 model = clone(self.model)
                 model.fit(X, y, sample_weight=w)
@@ -280,7 +280,7 @@ class FairBoost(object):
             self.models.append(model)
 
         if self.bootstrap_type == Bootstrap_type.STACKING:
-            self._fit_meta_model(datasets, dataset.labels.ravel())
+            self.__fit_meta_model(datasets, dataset.labels.ravel())
         return self
 
     def predict(self, dataset: BinaryLabelDataset) -> np.array:
