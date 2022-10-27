@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Set, Tuple
 from utils import read_data
 import pandas as pd
@@ -212,8 +213,14 @@ def get_RW_column_by_classifier(data: List, classifier: str) -> Tuple[pd.DataFra
 def get_none_column_by_classifier_by_algo(data: List, classifier: str, algos: Set) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = list(filter(lambda x: x['experiment'] == "fairboost" and x['classifier'] ==
              classifier and x['bootstrap_type'] == 'none' and set(x['preprocessing']) == algos, data))
-    return get_rows(x, 'Ensemble ' + "+".join(algos))
+    return get_rows(x, "+".join(algos) + " (no bootstrap)")
 
+
+@typechecked
+def get_default_column_by_classifier_by_algo(data: List, classifier: str, algos: Set) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    x = list(filter(lambda x: x['experiment'] == "fairboost" and x['classifier'] ==
+             classifier and x['bootstrap_type'] == 'default' and set(x['preprocessing']) == algos, data))
+    return get_rows(x, "+".join(algos) + " (with bootstrap)")
 
 @typechecked
 def get_tables(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -256,21 +263,55 @@ def get_tables_v2(data: List, classifier) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return pd.concat(performance, axis=1), pd.concat(fairness, axis=1)
 
 
+@typechecked
+def get_tables_v3(data: List, classifier) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Returns a table of results.
+            Parameters:
+                    data : all the data from the experiments (baseline_splits.json and fairboost_splits.json)
+            Returns:
+                    (performance, fairness) (Tuple): a tuple of tables wih average performances on datasets
+    """
+    funcs = [
+        (get_baseline_column_by_classifier, {}),
+        (get_LFR_column_by_classifier, {}),
+        (get_OP_column_by_classifier, {}),
+        (get_RW_column_by_classifier, {}),
+        (get_none_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc'])}),
+        (get_none_column_by_classifier_by_algo, {'algos': set(['LFR', 'Reweighing'])}),
+        (get_none_column_by_classifier_by_algo, {'algos': set(['Reweighing', 'OptimPreproc'])}),
+        (get_none_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc', 'Reweighing'])}),
+        (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc'])}),
+        (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'Reweighing'])}),
+        (get_default_column_by_classifier_by_algo, {'algos': set(['Reweighing', 'OptimPreproc'])}),
+        (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc', 'Reweighing'])})
+        ]
+
+    performance, fairness = [], []
+    for func, args in funcs:
+        x = func(data=data, **args, classifier=classifier)
+        performance.append(x[0])
+        fairness.append(x[1])
+    return pd.concat(performance, axis=1), pd.concat(fairness, axis=1)
+
 def main():
     data = read_data()
     # tables = get_tables(data)
     # print(tables[0].round(decimals=3).to_latex())
     # print(tables[1].round(decimals=3).to_latex())
-    tables_rf = get_tables_v2(data, 'Random Forest')
-    tables_lr = get_tables_v2(data, 'Logistic Regression')
-    print(tables_rf[0].round(decimals=3).to_latex())
-    print(tables_rf[1].round(decimals=3).to_latex())
-    print(tables_lr[0].round(decimals=3).to_latex())
-    print(tables_lr[1].round(decimals=3).to_latex())
+    tables_rf = get_tables_v3(data, 'Random Forest')
+    tables_lr = get_tables_v3(data, 'Logistic Regression')
+
+
+    # save tables
+    output_dir = 'analyzed_results'
+    tables_rf[0].round(decimals=3).to_csv(os.path.join(output_dir, 'rf_performance.csv'))
+    tables_rf[1].round(decimals=3).to_csv(os.path.join(output_dir, 'rf_fairness.csv'))
+    tables_lr[0].round(decimals=3).to_csv(os.path.join(output_dir, 'lr_performance.csv'))
+    tables_lr[1].round(decimals=3).to_csv(os.path.join(output_dir, 'lr_fairness.csv'))
 
     df = pd.DataFrame(data_for_stat_tests, columns=['method', 'dataset', 'classifier', 'accuracy', 'fairness',])
     df.to_csv('statistical_test/statistical_tests_raw_data.csv', index=False)
-
 
 if __name__ == "__main__":
     main()
