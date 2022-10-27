@@ -1,0 +1,5 @@
+,Baseline,LFR,OP,RW,LFR+OptimPreproc (no bootstrap),LFR+Reweighing (no bootstrap),Reweighing+OptimPreproc (no bootstrap),LFR+Reweighing+OptimPreproc (no bootstrap),LFR+OptimPreproc (with bootstrap),LFR+Reweighing (with bootstrap),Reweighing+OptimPreproc (with bootstrap),LFR+Reweighing+OptimPreproc (with bootstrap),LFR+OptimPreproc (with stacking),LFR+Reweighing (with stacking),Reweighing+OptimPreproc (with stacking),LFR+Reweighing+OptimPreproc (with stacking)
+german,0.86,0.862,0.863,0.942,0.842,0.894,0.877,0.862,0.763,0.838,0.718,0.778,0.934,0.91,0.971,0.915
+compas,0.69,0.963,0.784,0.863,0.784,0.851,0.865,0.865,0.795,0.879,0.899,0.878,0.778,0.863,0.798,0.781
+adult,0.0,0.891,0.424,0.686,0.697,0.891,0.432,0.697,0.634,0.796,0.519,0.582,0.528,0.686,0.432,0.518
+average,0.517,0.905,0.69,0.83,0.774,0.879,0.725,0.808,0.731,0.838,0.712,0.746,0.747,0.82,0.734,0.738

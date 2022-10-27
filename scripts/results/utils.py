@@ -167,9 +167,11 @@ def read_data() -> List[Dict]:
     data_path = Path(crnt_dir, "raw_data")
     fairboost_results_path = Path(data_path, "fairboost_splits.json")
     baseline_results_path = Path(data_path, "baseline_splits.json")
+    stacking_results_path = Path(data_path, "fairboost_splits_stacking.json")
     data_baseline = read_data_baseline(baseline_results_path)
     data_fairboost = read_data_fairboost(fairboost_results_path)
-    return data_baseline + data_fairboost
+    data_stacking = read_data_fairboost(stacking_results_path)
+    return data_baseline + data_fairboost + data_stacking
 
 
 @typechecked

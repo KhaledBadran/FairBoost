@@ -223,6 +223,12 @@ def get_default_column_by_classifier_by_algo(data: List, classifier: str, algos:
     return get_rows(x, "+".join(algos) + " (with bootstrap)")
 
 @typechecked
+def get_stacking_column_by_classifier_by_algo(data: List, classifier: str, algos: Set) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    x = list(filter(lambda x: x['experiment'] == "fairboost" and x['classifier'] ==
+             classifier and x['bootstrap_type'] == 'stacking' and set(x['preprocessing']) == algos, data))
+    return get_rows(x, "+".join(algos) + " (with stacking)")
+
+@typechecked
 def get_tables(data: List) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Returns a table of results.
@@ -284,8 +290,12 @@ def get_tables_v3(data: List, classifier) -> Tuple[pd.DataFrame, pd.DataFrame]:
         (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc'])}),
         (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'Reweighing'])}),
         (get_default_column_by_classifier_by_algo, {'algos': set(['Reweighing', 'OptimPreproc'])}),
-        (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc', 'Reweighing'])})
-        ]
+        (get_default_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc', 'Reweighing'])}),
+        (get_stacking_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc'])}),
+        (get_stacking_column_by_classifier_by_algo, {'algos': set(['LFR', 'Reweighing'])}),
+        (get_stacking_column_by_classifier_by_algo, {'algos': set(['Reweighing', 'OptimPreproc'])}),
+        (get_stacking_column_by_classifier_by_algo, {'algos': set(['LFR', 'OptimPreproc', 'Reweighing'])}),
+    ]
 
     performance, fairness = [], []
     for func, args in funcs:
