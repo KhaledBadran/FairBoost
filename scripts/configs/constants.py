@@ -10,9 +10,9 @@ SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 # ------------------------------- FAIRBOOST GRID ------------------------------- #
 FairBoost_param_grid = {
     'init': {"bootstrap_type": [
-        # Bootstrap_type.NONE,
-        # Bootstrap_type.DEFAULT,
-        # Bootstrap_type.CUSTOM,
+        Bootstrap_type.NONE,
+        Bootstrap_type.DEFAULT,
+        Bootstrap_type.CUSTOM,
         Bootstrap_type.STACKING
     ]},
     'preprocessing': [[Preproc_name.OptimPreproc],
